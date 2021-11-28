@@ -1,0 +1,7 @@
+[
+	{"desc": "Minecraft Whitelist", "file": "/minecraft-misaka/mirai/files/mc.py"},
+	{"desc": "MUTE", "file": "/minecraft-misaka/mirai/files/muter.py"},
+	{"desc": "Deniedwords", "file": "/minecraft-misaka/mirai/files/deniedwords.py"},
+	{"desc": "DB Set", "file": "/minecraft-misaka/mirai/files/commands.py"}
+]
+	
