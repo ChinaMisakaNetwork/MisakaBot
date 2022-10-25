@@ -7,6 +7,7 @@
 #include "administrative.hpp"
 #include "deniedwords.hpp"
 #include "calc.hpp"
+#include "chat.hpp"
 #include "wordcheck.hpp"
 #include "commands.hpp"
 using namespace std;
@@ -14,9 +15,10 @@ using namespace Cyan;
 map<int, TrieAC>ACer;
 map<int, bool>wordcheck_list;
 mutex ACer_lock, wordcheck_list_lock;
-string handle_message(GroupMessage m,MiraiBot& bot,db_info dbf) {
+string handle_message(GroupMessage m,MiraiBot& bot,db_info dbf,GroupImage& img) {
 	administrative admin(dbf);
 	deniedwords dw(bot, dbf);
+	chatobj chat(dbf);
 	calc calculator;
 	commands cmd(dbf);
 	wordchecker checker(dbf);
@@ -33,6 +35,8 @@ string handle_message(GroupMessage m,MiraiBot& bot,db_info dbf) {
 	res = cmd.handler(m);
 	if (!res.empty())return res;
 	res = checker.handler(m,ACer,wordcheck_list);
+	if (!res.empty())return res;
+	res = chat.handler(m, img);
 	if (!res.empty())return res;
 	return "";
 }
@@ -51,6 +55,7 @@ reboot:
 		cout << "Conf file isn't exist." << endl;
 		fout.open("/etc/MisakaBot/MisakaBot.conf");
 		if(!fout.good())system("mkdir /etc/MisakaBot");
+		fout.open("/etc/MisakaBot/MisakaBot.conf");
 		fout << "BotQQ=12345678" << endl << "HttpHostname=localhost" << endl << "WebSocketHostname=localhost" << endl << "HttpPort=8080" << endl << "WebSocketPort=8080" << endl << "VerifyKey=VerifyKey" << endl << "admin_database=DatabaseName" <<endl<<"chat_database=DatabaseName"<<endl<<"denied_database=DatabaseName"<< endl << "MySQLaddress=localhost" << endl << "MySQLusername=username" << endl << "MySQLpassword=password" << endl << "MySQLconnectPort=3306";
 		cout << "Conf created at /etc/MisakaBot/MisakaBot.conf , please edit it and restart the Bot." << endl;
 		return 1;
@@ -99,10 +104,13 @@ reboot:
 			try{
 				string result = "";
 				MessageChain mc;
-				result = handle_message(m, bot, db_information);
+				GroupImage img;
+				result = handle_message(m, bot, db_information, img);
 				cout << result;
 				if (!result.empty()) {
+					mc.At(m.Sender.QQ);
 					mc.Add<PlainMessage>(result);
+					mc.Image(img);
 					bot.SendMessage(m.Sender.Group.GID, mc);
 					goto next;
 				}

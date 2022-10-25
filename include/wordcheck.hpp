@@ -52,7 +52,7 @@ public:
 		ACer[m.Sender.Group.GID.ToInt64()].match(temp,pair_res);
 		if (!pair_res.empty()) {
 			try {
-				bot.Recall(m.MessageId(), m.Sender.Group.GID.ToInt64());
+				bot.Recall(m.MessageId(), m.Sender.Group.GID);
 				bot.Mute(m.Sender.Group.GID, m.Sender.QQ, 60);
 				return "请注意言辞";
 			}

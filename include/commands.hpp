@@ -52,7 +52,8 @@ public:
 				return "";
 			}
 			catch (const std::exception& ex) {
-				return ex.what();
+				cout << ex.what() << endl;
+				return "出现错误，请查看终端以获取详细信息";
 			}
 		}
 		if (*cmds.begin() == "删除对话") {
