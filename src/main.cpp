@@ -9,6 +9,7 @@
 #include "calc.hpp"
 #include "chat.hpp"
 #include "wordcheck.hpp"
+#include "hitokoto.hpp"
 #include "commands.hpp"
 using namespace std;
 using namespace Cyan;

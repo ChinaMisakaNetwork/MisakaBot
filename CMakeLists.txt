@@ -9,13 +9,13 @@ set(CMAKE_CXX_STANDARD 17)
 set(MIRAI_CPP_BUILD_EXAMPLES OFF CACHE BOOL "Build examples" FORCE)
 # 添加子模块 mirai-cpp
 add_subdirectory(mirai-cpp)
+add_subdirectory(cpr)
 # 源码以 UTF-8 编码保存，使用 MSVC 编译器时需要加编译参数提供支持
 if(MSVC)
     add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
     add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
     message(STATUS "optional: /UTF-8")   
 endif(MSVC)
-
 # 要添加.cpp源文件，请修改这一行
 # 例如：add_executable(${PROJECT_NAME} src/main.cpp src/a.cpp src/b.cpp)
 add_executable(${PROJECT_NAME} src/main.cpp)
@@ -25,6 +25,7 @@ include_directories("/usr/include/mysql++")
 include_directories("/usr/include/mysql")
 # 链接 mirai-cpp
 target_link_libraries(${PROJECT_NAME} PRIVATE mirai-cpp)
+target_link_libraries(${PROJECT_NAME} PRIVATE cpr)
 # 使用 mirai-cpp 静态库
 target_compile_definitions(${PROJECT_NAME} PRIVATE MIRAICPP_STATICLIB)
 target_link_libraries(${PROJECT_NAME} PRIVATE -lmysqlpp)
