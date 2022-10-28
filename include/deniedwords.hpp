@@ -21,10 +21,11 @@ public:
             commands.push_back(temp);
         }
         if (commands.size() == 0)return "";
-        if (*commands.begin() == "添加违禁词") {
+        if (*commands.begin() == "添加敏感词") {
             if (!checkperm(m.Sender.Group.GID.ToInt64(), m.Sender.QQ.ToInt64())) {
                 return "您不是本群的管理员";
             }
+            if (commands.size() != 2)return "";
             try {
                 change_db_name(dbinfo.db_denied);
                 query.reset();
@@ -43,10 +44,11 @@ public:
                 return "出现错误，请查看终端以获取详细信息";
             }
         }
-        if (*commands.begin() == "删除违禁词") {
+        if (*commands.begin() == "删除敏感词") {
             if (!checkperm(m.Sender.Group.GID.ToInt64(), m.Sender.QQ.ToInt64())) {
                 return "您不是本群的管理员";
             }
+            if (commands.size() != 2)return "";
             try {
                 change_db_name(dbinfo.db_denied);
                 query.reset();

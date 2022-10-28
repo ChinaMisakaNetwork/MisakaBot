@@ -22,6 +22,7 @@ public:
 			if (!checkperm(m.Sender.Group.GID.ToInt64(), m.Sender.QQ.ToInt64())) {
 				return "您不是本群的管理员";
 			}
+			if (commands.size() != 3)return "";
 			try {
 				bot.Mute(m.Sender.Group.GID, QQ_t(atoi(commands[1].c_str())), atoi(commands[2].c_str()));
 			}
@@ -35,6 +36,7 @@ public:
 			if (!checkperm(m.Sender.Group.GID.ToInt64(), m.Sender.QQ.ToInt64())) {
 				return "您不是本群的管理员";
 			}
+			if (commands.size() != 2)return "";
 			try {
 				bot.Kick(m.Sender.Group.GID, QQ_t(atoi(commands[1].c_str())));
 			}
@@ -46,6 +48,7 @@ public:
 			if (!checkperm(m.Sender.Group.GID.ToInt64(), m.Sender.QQ.ToInt64())) {
 				return "您不是本群的管理员";
 			}
+			if (commands.size() != 2)return "";
 			return grantperm(m.Sender.Group.GID.ToInt64(), m.Sender.QQ.ToInt64());
 		}
 		return "";

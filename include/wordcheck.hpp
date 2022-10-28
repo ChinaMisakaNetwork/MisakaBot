@@ -15,7 +15,7 @@ public:
 	wordchecker(db_info dbinf1) :permchecker(dbinf1) {
 		dbinf = dbinf1;
 	}
-	void init(map<int, TrieAC>& ACer, map<int, bool>& enabled,mutex& ACer_lock, mutex &wordcheck_list_lock) {
+	void init(map<int, TrieAc>& ACer, map<int, bool>& enabled,mutex& ACer_lock, mutex &wordcheck_list_lock) {
 		map<int, vector<string>>temp;
 		ACer_lock.lock();
 		wordcheck_list_lock.lock();
@@ -37,13 +37,14 @@ public:
 			for (auto i = temp.begin(); i != temp.end(); ++i) {
 				ACer[i->first].load_pattern(i->second);
 				ACer[i->first].dispose();
+				cout << i->first << "敏感词加载完成" << endl;
 				enabled[i->first] = true;
 			}
 		}
 		ACer_lock.unlock();
 		wordcheck_list_lock.unlock();
 	}
-	string handler(GroupMessage m, map<int, TrieAC>& ACer, map<int, bool>& enabled) {
+	string handler(GroupMessage m, map<int, TrieAc>& ACer, map<int, bool>& enabled) {
 		MiraiBot& bot = m.GetMiraiBot();
 		if (m.MessageChain.GetPlainText().empty())return "";
 		string temp = m.MessageChain.GetPlainText();

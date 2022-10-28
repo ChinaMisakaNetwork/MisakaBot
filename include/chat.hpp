@@ -19,6 +19,7 @@ public:
 		if (!m.AtMe())return "";
 		try {
 			string s = m.MessageChain.GetPlainText();
+			s.erase(s.begin());
 			change_db_name(dbinfo.db_chat);
 			query.reset();
 			query << "select * from miraichat where %0q regexp question order by char_length(question) desc";
@@ -33,8 +34,10 @@ public:
 				sres[0]["answer"].to_string(ans);
 				return ans;
 			}
-			auto res = cpr::Get(cpr::Url{ "https://api.qingyunke.com/api.php?key=free&appid=0&msg=" + s });
-			return string(res.text.begin() + 23, res.text.end() - 2);
+			s = "https://api.qingyunke.com/api.php?key=free&appid=0&msg=" + s;
+			auto res = cpr::Get(cpr::Url{s});
+			json reply = json::parse(res.text);
+			return reply["content"].get<string>();
 		}
 		catch (const std::exception& ex) {
 			cout << ex.what() << endl;

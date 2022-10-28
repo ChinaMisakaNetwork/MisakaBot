@@ -13,7 +13,7 @@
 #include "commands.hpp"
 using namespace std;
 using namespace Cyan;
-map<int, TrieAC>ACer;
+map<int, TrieAc>ACer;
 map<int, bool>wordcheck_list;
 mutex ACer_lock, wordcheck_list_lock;
 string handle_message(GroupMessage m,MiraiBot& bot,db_info dbf,GroupImage& img) {
@@ -23,6 +23,7 @@ string handle_message(GroupMessage m,MiraiBot& bot,db_info dbf,GroupImage& img) 
 	calc calculator;
 	commands cmd(dbf);
 	wordchecker checker(dbf);
+	hitokoto htkt;
 	string res = "";
 	res = admin.handler(m);
 	if (!res.empty())return res;
@@ -39,6 +40,8 @@ string handle_message(GroupMessage m,MiraiBot& bot,db_info dbf,GroupImage& img) 
 	if (!res.empty())return res;
 	res = chat.handler(m, img);
 	if (!res.empty())return res;
+	res = htkt.handler(m,img);
+	if (!res.empty())return res;
 	return "";
 }
 int main(int argc,const char* argv[]) {
@@ -51,6 +54,7 @@ reboot:
 	ifstream fin;
 	ofstream fout;
 	db_info db_information;
+	ios::sync_with_stdio(false);
 	fin.open("/etc/MisakaBot/MisakaBot.conf");
 	if (!fin.good()) {
 		cout << "Conf file isn't exist." << endl;
@@ -103,11 +107,11 @@ reboot:
 	bot.On<GroupMessage>(
 		[&](GroupMessage m){
 			try{
+				m.Timestamp();
 				string result = "";
 				MessageChain mc;
 				GroupImage img;
 				result = handle_message(m, bot, db_information, img);
-				cout << result;
 				if (!result.empty()) {
 					mc.At(m.Sender.QQ);
 					mc.Add<PlainMessage>(result);
@@ -138,15 +142,61 @@ reboot:
 			}
 		});
 	string cmd;
-	while (cin >> cmd){
-		if (cmd == "exit"){
+	vector<string>commands;
+	while (getline(cin,cmd)){
+		stringstream sin(cmd);
+		string temp = "";
+		while (getline(sin, temp, ' ')) {
+			commands.push_back(temp);
+		}
+		if (commands.size() == 0)goto cont;
+		if (cmd == "exit") {
 			bot.Disconnect();
 			break;
 		}
 		if (cmd == "reboot") {
 			bot.Disconnect();
+			commands.clear();
 			goto reboot;
 		}
+		if (*commands.begin() == "添加敏感词") {
+			if (commands.size() != 3) {
+				cout << "格式错误" << endl;
+				goto cont;
+			}
+			permchecker db(db_information);
+			db.change_db_name(db_information.db_denied);
+			db.query.reset();
+			string s = commands[2];
+			db.query << "insert into deniedwords(groupid, word) values (%0q,%1q)";
+			db.query.parse();
+			mysqlpp::SimpleResult res = db.query.execute(commands[1], s);
+			if (string(res.info()).empty()) {
+				cout << "已添加" << endl;
+			}
+			wordchecker checker(db_information);
+			checker.init(ACer, wordcheck_list, ACer_lock, wordcheck_list_lock);
+		}
+		if (*commands.begin() == "删除敏感词") {
+			if (commands.size() != 3) {
+				cout << "格式错误" << endl;
+				goto cont;
+			}
+			permchecker db(db_information);
+			db.change_db_name(db_information.db_denied);
+			db.query.reset();
+			string s = commands[2];
+			db.query << "delete from deniedwords where groupid = %0q and word = %1q";
+			db.query.parse();
+			mysqlpp::SimpleResult res = db.query.execute(commands[1], s);
+			if (string(res.info()).empty()) {
+				cout << "已添加" << endl;
+			}
+			wordchecker checker(db_information);
+			checker.init(ACer, wordcheck_list, ACer_lock, wordcheck_list_lock);
+		}
+	cont:;
+		commands.clear();
 	}
 	return 0;
 }

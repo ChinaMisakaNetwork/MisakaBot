@@ -21,7 +21,6 @@ public:
 			cmds.push_back(temp);
 		}
 		if (cmds.size() == 0)return "";
-		
 		if (*cmds.begin() == "添加对话") {
 			if (!checkperm(m.Sender.Group.GID.ToInt64(), m.Sender.QQ.ToInt64())) {
 				return "您不是本群的管理员";
