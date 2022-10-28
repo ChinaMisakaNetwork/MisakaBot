@@ -19,8 +19,7 @@ public:
             expression_t exp;
             parser_t par;
             if (!par.compile(commands[1], exp)) {
-                cout << "Compile Error";
-                return "出现错误，请查看终端以获取详细信息";
+                return "格式错误";
             }
             ans += to_string(exp.value());
             return ans;

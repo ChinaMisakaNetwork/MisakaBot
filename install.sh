@@ -1,3 +1,2 @@
 !#/bin/bash
-cmake .
-make
+cmake --build --config Release
