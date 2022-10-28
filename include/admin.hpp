@@ -43,10 +43,12 @@ public:
 		return true;
 	}
 	string grantperm(const int& groupid, const int& qq) {
-		query << "insert into qqadmin(groupid,adminqq) values (" << mysqlpp::quote << to_string(groupid) << "," << mysqlpp::quote << to_string(qq) << ")";
-		mysqlpp::SimpleResult res=query.execute();
+		query.reset();
+		query << "insert into qqadmin(groupid,adminqq) values (%0q,%1q)";
+		query.parse();
+		mysqlpp::SimpleResult res=query.execute(groupid,qq);
 		if (string(res.info()).empty()) {
-			return "Added.";
+			return "已添加";
 		}
 		cout << string(res.info()) << endl;
 		return "出现错误，请查看终端以获取详细信息";

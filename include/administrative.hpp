@@ -44,7 +44,7 @@ public:
 				return ex.what();
 			}
 		}
-		if (*commands.begin() == "$addadmin") {
+		if (*commands.begin() == "添加管理员") {
 			if (!checkperm(m.Sender.Group.GID.ToInt64(), m.Sender.QQ.ToInt64())) {
 				return "您不是本群的管理员";
 			}

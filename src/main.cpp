@@ -195,6 +195,15 @@ reboot:
 			wordchecker checker(db_information);
 			checker.init(ACer, wordcheck_list, ACer_lock, wordcheck_list_lock);
 		}
+		if (*commands.begin() == "添加管理员") {
+			if (commands.size() != 3) {
+				cout << "格式错误" << endl;
+				goto cont;
+			}
+			permchecker db(db_information);
+			string res = db.grantperm(atoi(commands[1].c_str()), atoi(commands[2].c_str()));
+			cout << res << endl;
+		}
 	cont:;
 		commands.clear();
 	}
