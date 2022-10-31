@@ -35,7 +35,7 @@ public:
 			}
 			catch (const exception& ex) {
 				cout << ex.what() << endl;
-				return "出现错误，请查看终端以获取详细信息";
+				return "出现错误，请稍后再试";
 			}
 		}
 		return "";

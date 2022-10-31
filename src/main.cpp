@@ -11,19 +11,25 @@
 #include "wordcheck.hpp"
 #include "hitokoto.hpp"
 #include "commands.hpp"
+#include "neteasemusic.hpp"
+#include "record.hpp"
 using namespace std;
 using namespace Cyan;
 map<int, TrieAc>ACer;
 map<int, bool>wordcheck_list;
 mutex ACer_lock, wordcheck_list_lock;
+map<int, mutex>fslock;
 string handle_message(GroupMessage m,MiraiBot& bot,db_info dbf,GroupImage& img) {
 	administrative admin(dbf);
 	deniedwords dw(bot, dbf);
+	neteasemusic music;
 	chatobj chat(dbf);
 	calc calculator;
 	commands cmd(dbf);
 	wordchecker checker(dbf);
 	hitokoto htkt;
+	recorder rcer;
+	rcer.handler(m, fslock);
 	string res = "";
 	res = admin.handler(m);
 	if (!res.empty())return res;
@@ -42,6 +48,8 @@ string handle_message(GroupMessage m,MiraiBot& bot,db_info dbf,GroupImage& img) 
 	if (!res.empty())return res;
 	res = htkt.handler(m,img);
 	if (!res.empty())return res;
+	res = music.handler(m);
+	if (!res.empty())return res;
 	return "";
 }
 int main(int argc,const char* argv[]) {
@@ -54,14 +62,13 @@ reboot:
 	ifstream fin;
 	ofstream fout;
 	db_info db_information;
-	ios::sync_with_stdio(false);
 	fin.open("/etc/MisakaBot/MisakaBot.conf");
 	if (!fin.good()) {
 		cout << "Conf file isn't exist." << endl;
 		fout.open("/etc/MisakaBot/MisakaBot.conf");
 		if(!fout.good())system("mkdir /etc/MisakaBot");
 		fout.open("/etc/MisakaBot/MisakaBot.conf");
-		fout << "BotQQ=12345678" << endl << "HttpHostname=localhost" << endl << "WebSocketHostname=localhost" << endl << "HttpPort=8080" << endl << "WebSocketPort=8080" << endl << "VerifyKey=VerifyKey" << endl << "admin_database=DatabaseName" <<endl<<"chat_database=DatabaseName"<<endl<<"denied_database=DatabaseName"<< endl << "MySQLaddress=localhost" << endl << "MySQLusername=username" << endl << "MySQLpassword=password" << endl << "MySQLconnectPort=3306";
+		fout << "BotQQ=12345678" << endl << "HttpHostname=localhost" << endl << "WebSocketHostname=localhost" << endl << "HttpPort=8080" << endl << "WebSocketPort=8080" << endl << "VerifyKey=VerifyKey" << endl << "MySQLdatabase=DatabaseName" <<endl << "MySQLaddress=localhost" << endl << "MySQLusername=username" << endl << "MySQLpassword=password" << endl << "MySQLconnectPort=3306";
 		cout << "Conf created at /etc/MisakaBot/MisakaBot.conf , please edit it and restart the Bot." << endl;
 		return 1;
 	}
@@ -82,13 +89,11 @@ reboot:
 		opts.HttpPort = stoi(conf[3]);					// 同上
 		opts.WebSocketPort = stoi(conf[4]);				// 同上
 		opts.VerifyKey = conf[5];			// 同上
-		db_information.db_admin = conf[6];
-		db_information.db_chat = conf[7];
-		db_information.db_denied = conf[8];
-		db_information.db_addr = conf[9];
-		db_information.db_username = conf[10];
-		db_information.db_password = conf[11];
-		db_information.port = atoi(conf[12].c_str());
+		db_information.db_name = conf[6];
+		db_information.db_addr = conf[7];
+		db_information.db_username = conf[8];
+		db_information.db_password = conf[9];
+		db_information.port = atoi(conf[10].c_str());
 		wordchecker wordchecker_init(db_information);
 		wordchecker_init.init(ACer,wordcheck_list,ACer_lock,wordcheck_list_lock);
 	}
@@ -107,10 +112,10 @@ reboot:
 	bot.On<GroupMessage>(
 		[&](GroupMessage m){
 			try{
-				m.Timestamp();
 				string result = "";
 				MessageChain mc;
 				GroupImage img;
+				VoiceMessage vc;
 				result = handle_message(m, bot, db_information, img);
 				if (!result.empty()) {
 					mc.At(m.Sender.QQ);
@@ -165,7 +170,6 @@ reboot:
 				goto cont;
 			}
 			permchecker db(db_information);
-			db.change_db_name(db_information.db_denied);
 			db.query.reset();
 			string s = commands[2];
 			db.query << "insert into deniedwords(groupid, word) values (%0q,%1q)";
@@ -183,7 +187,6 @@ reboot:
 				goto cont;
 			}
 			permchecker db(db_information);
-			db.change_db_name(db_information.db_denied);
 			db.query.reset();
 			string s = commands[2];
 			db.query << "delete from deniedwords where groupid = %0q and word = %1q";

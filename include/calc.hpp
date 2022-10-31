@@ -1,7 +1,6 @@
 ﻿#include "exprtk.hpp"
 #include <mirai.h>
 #include <vector>
-#include "wstring.hpp"
 #include <string>
 typedef double T;
 typedef exprtk::expression<T>   expression_t;
@@ -11,7 +10,12 @@ using namespace Cyan;
 class calc {
 public:
 	string handler(GroupMessage m) {
-        vector<string>commands = stringSplit(m.MessageChain.GetPlainText(), ' ');
+        vector<string>commands;
+        stringstream sin(m.MessageChain.GetPlainText());
+        string temp;
+        while (getline(sin, temp, ';')) {
+            commands.push_back(temp);
+        }
         if (commands.size() == 0)return "";
         if (commands.size() != 2)return "";
         if (*commands.begin() == "计算") {

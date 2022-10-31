@@ -2,7 +2,6 @@
 #include <string>
 #include "admin.hpp"
 #include "autoac.hpp"
-#include "wstring.hpp"
 using namespace std;
 using namespace Cyan;
 class deniedwords :public permchecker{
@@ -27,7 +26,6 @@ public:
             }
             if (commands.size() != 2)return "";
             try {
-                change_db_name(dbinfo.db_denied);
                 query.reset();
                 string s=commands[1];
                 query << "insert into deniedwords(groupid, word) values (%0q,%1q)";
@@ -37,11 +35,11 @@ public:
                     return "已添加";
                 }
                 cout << string(res.info()) << endl;
-                return "出现错误，请查看终端以获取详细信息";
+                return "出现错误，请稍后再试";
             }
             catch (const std::exception& ex) {
                 cout << ex.what() << endl;
-                return "出现错误，请查看终端以获取详细信息";
+                return "出现错误，请稍后再试";
             }
         }
         if (*commands.begin() == "删除敏感词") {
@@ -50,7 +48,6 @@ public:
             }
             if (commands.size() != 2)return "";
             try {
-                change_db_name(dbinfo.db_denied);
                 query.reset();
                 string s=commands[1];
                 query << "delete from deniedwords where groupid = %0q and word = %1q";
@@ -60,11 +57,11 @@ public:
                     return "已删除";
                 }
                 cout << string(res.info()) << endl;
-                return "出现错误，请查看终端以获取详细信息";
+                return "出现错误，请稍后再试";
             }
             catch (const std::exception& ex) {
                 cout << ex.what() << endl;
-                return "出现错误，请查看终端以获取详细信息";
+                return "出现错误，请稍后再试";
             }
         }
         return "";

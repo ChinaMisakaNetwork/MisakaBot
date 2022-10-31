@@ -20,7 +20,6 @@ public:
 		try {
 			string s = m.MessageChain.GetPlainText();
 			s.erase(s.begin());
-			change_db_name(dbinfo.db_chat);
 			query.reset();
 			query << "select * from miraichat where %0q regexp question order by char_length(question) desc";
 			query.parse();
@@ -41,7 +40,7 @@ public:
 		}
 		catch (const std::exception& ex) {
 			cout << ex.what() << endl;
-			return "出现错误，请查看终端以获取详细信息";
+			return "出现错误，请稍后再试";
 		}
 	}
 };

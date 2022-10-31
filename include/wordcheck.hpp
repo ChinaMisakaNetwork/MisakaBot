@@ -21,7 +21,6 @@ public:
 		wordcheck_list_lock.lock();
 		ACer.clear();
 		enabled.clear();
-		change_db_name(dbinf.db_denied);
 		query.reset();
 		query << "select * from deniedwords";
 		mysqlpp::StoreQueryResult res = query.store();
@@ -59,7 +58,7 @@ public:
 			}
 			catch (const std::exception& ex) {
 				cout << ex.what() << endl;
-				return "出现错误，请查看终端以获取详细信息";
+				return "出现错误，请稍后再试";
 			}
 		}
 		else return "";

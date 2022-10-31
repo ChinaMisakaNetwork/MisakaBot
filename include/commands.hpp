@@ -27,7 +27,6 @@ public:
 			}
 			if (cmds.size() > 5 || cmds.size() < 4)return "请检查输入格式！";
 			try {
-				change_db_name(dbinfo.db_chat);
 				query.reset();
 				if (cmds[3] == "1") {
 					query << "insert into miraichat(question, answer, have_img, img_url) values (%0q,%1q,%2q,%3q)";
@@ -46,13 +45,13 @@ public:
 						return "已添加";
 					}
 					cout << string(res.info()) << endl;
-					return "出现错误，请查看终端以获取详细信息";
+					return "出现错误，请稍后再试";
 				}
 				return "";
 			}
 			catch (const std::exception& ex) {
 				cout << ex.what() << endl;
-				return "出现错误，请查看终端以获取详细信息";
+				return "出现错误，请稍后再试";
 			}
 		}
 		if (*cmds.begin() == "删除对话") {
@@ -61,7 +60,6 @@ public:
 			}
 			if (cmds.size() != 2)return "请检查输入格式！";
 			try {
-				change_db_name(dbinfo.db_chat);
 				query.reset();
 				query << "delete from miraichat where question = %0q";
 				query.parse();
@@ -70,11 +68,11 @@ public:
 					return "已删除";
 				}
 				cout << string(res.info()) << endl;
-				return "出现错误，请查看终端以获取详细信息";
+				return "出现错误，请稍后再试";
 			}
 			catch (const std::exception& ex) {
 				cout << ex.what() << endl;
-				return "出现错误，请查看终端以获取详细信息";
+				return "出现错误，请稍后再试";
 			}
 		}
 		return "";

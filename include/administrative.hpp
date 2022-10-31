@@ -18,7 +18,7 @@ public:
 			commands.push_back(temp);
 		}
 		if (commands.size() == 0)return "";
-		if (*commands.begin() == "$mute") {
+		if (*commands.begin() == "禁言") {
 			if (!checkperm(m.Sender.Group.GID.ToInt64(), m.Sender.QQ.ToInt64())) {
 				return "您不是本群的管理员";
 			}
@@ -30,15 +30,26 @@ public:
 				cout << ex.what() << endl;
 				return "出现错误，请查看终端以获取详细信息";
 			}
-			return "Success Executed.";
 		}
-		if (*commands.begin() == "$kick") {
+		if (*commands.begin() == "踢出") {
 			if (!checkperm(m.Sender.Group.GID.ToInt64(), m.Sender.QQ.ToInt64())) {
 				return "您不是本群的管理员";
 			}
 			if (commands.size() != 2)return "";
 			try {
 				bot.Kick(m.Sender.Group.GID, QQ_t(atoi(commands[1].c_str())));
+			}
+			catch (const exception& ex) {
+				return ex.what();
+			}
+		}
+		if (*commands.begin() == "取消禁言") {
+			if (!checkperm(m.Sender.Group.GID.ToInt64(), m.Sender.QQ.ToInt64())) {
+				return "您不是本群的管理员";
+			}
+			if (commands.size() != 2)return "";
+			try {
+				bot.UnMute(m.Sender.Group.GID, QQ_t(atoi(commands[1].c_str())));
 			}
 			catch (const exception& ex) {
 				return ex.what();

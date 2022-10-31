@@ -6,7 +6,7 @@
 using namespace std;
 struct db_info {
 	string db_addr, db_username, db_password;
-	string db_admin, db_chat, db_denied;
+	string db_name;
 	int port;
 };
 class permchecker {
@@ -21,7 +21,7 @@ protected:
 public:
 	mysqlpp::Query query = conn.query();
 	permchecker(db_info dbinf) {
-		db_name = dbinf.db_admin;
+		db_name = dbinf.db_name;
 		db_addr = dbinf.db_addr;
 		port = dbinf.port;
 		username = dbinf.db_username;
@@ -29,18 +29,10 @@ public:
 		connected = conn.connect(db_name.c_str(), db_addr.c_str(), username.c_str(), pwd.c_str(), port);
 		query = conn.query();
 	}
-	void change_db_name(string newname) {
-		conn.disconnect();
-		conn.connect(newname.c_str(), db_addr.c_str(), username.c_str(), pwd.c_str(), port);
-		query = conn.query();
-	}
 	bool checkperm(const int& groupid, const int& qq) {
 		query << "select * from qqadmin where groupid =" << mysqlpp::quote << to_string(groupid) << " and adminqq =" << mysqlpp::quote << to_string(qq);
-		mysqlpp::SimpleResult res=query.execute();
-		if ((!res) || res.rows() < 0) {
-			return false;
-		}
-		return true;
+		mysqlpp::StoreQueryResult res=query.store();
+		return res;
 	}
 	string grantperm(const int& groupid, const int& qq) {
 		query.reset();
