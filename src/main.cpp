@@ -12,7 +12,9 @@
 #include "hitokoto.hpp"
 #include "commands.hpp"
 #include "neteasemusic.hpp"
+#include "weather.hpp"
 #include "record.hpp"
+#include "bilibili.hpp"
 using namespace std;
 using namespace Cyan;
 map<int, TrieAc>ACer;
@@ -24,7 +26,9 @@ string handle_message(GroupMessage m,MiraiBot& bot,db_info dbf,GroupImage& img) 
 	deniedwords dw(bot, dbf);
 	neteasemusic music;
 	chatobj chat(dbf);
+	weather wt;
 	calc calculator;
+	bilibili bz;
 	commands cmd(dbf);
 	wordchecker checker(dbf);
 	hitokoto htkt;
@@ -50,6 +54,10 @@ string handle_message(GroupMessage m,MiraiBot& bot,db_info dbf,GroupImage& img) 
 	if (!res.empty())return res;
 	res = music.handler(m);
 	if (!res.empty())return res;
+	res = wt.handler(m);
+	if (!res.empty())return res;
+	res = bz.handler(m);
+	if (!res.empty())return res;
 	return "";
 }
 int main(int argc,const char* argv[]) {
@@ -62,13 +70,14 @@ reboot:
 	ifstream fin;
 	ofstream fout;
 	db_info db_information;
+	string welcomemessage = "";
 	fin.open("/etc/MisakaBot/MisakaBot.conf");
 	if (!fin.good()) {
 		cout << "Conf file isn't exist." << endl;
 		fout.open("/etc/MisakaBot/MisakaBot.conf");
 		if(!fout.good())system("mkdir /etc/MisakaBot");
 		fout.open("/etc/MisakaBot/MisakaBot.conf");
-		fout << "BotQQ=12345678" << endl << "HttpHostname=localhost" << endl << "WebSocketHostname=localhost" << endl << "HttpPort=8080" << endl << "WebSocketPort=8080" << endl << "VerifyKey=VerifyKey" << endl << "MySQLdatabase=DatabaseName" <<endl << "MySQLaddress=localhost" << endl << "MySQLusername=username" << endl << "MySQLpassword=password" << endl << "MySQLconnectPort=3306";
+		fout << "BotQQ=12345678" << endl << "HttpHostname=localhost" << endl << "WebSocketHostname=localhost" << endl << "HttpPort=8080" << endl << "WebSocketPort=8080" << endl << "VerifyKey=VerifyKey" << endl << "MySQLdatabase=DatabaseName" <<endl << "MySQLaddress=localhost" << endl << "MySQLusername=username" << endl << "MySQLpassword=password" << endl << "MySQLconnectPort=3306"<<endl<<"入群欢迎词=欢迎词";
 		cout << "Conf created at /etc/MisakaBot/MisakaBot.conf , please edit it and restart the Bot." << endl;
 		return 1;
 	}
@@ -94,6 +103,7 @@ reboot:
 		db_information.db_username = conf[8];
 		db_information.db_password = conf[9];
 		db_information.port = atoi(conf[10].c_str());
+		welcomemessage = conf[11];
 		wordchecker wordchecker_init(db_information);
 		wordchecker_init.init(ACer,wordcheck_list,ACer_lock,wordcheck_list_lock);
 	}
@@ -129,6 +139,14 @@ reboot:
 				cout << ex.what() << endl;
 			}
 		next:;
+		});
+	bot.On<MemberJoinEvent>([&](MemberJoinEvent m) {
+			try {
+				MessageChain mc;
+				mc.At(m.NewMember.QQ);
+				mc.Add<PlainMessage>(welcomemessage);
+				bot.SendMessage(m.NewMember.Group.GID, mc);
+			}catch(...){}
 		});
 	bot.On<LostConnection>([&](LostConnection e){
 			cout << e.ErrorMessage << " (" << e.Code << ")" << endl;

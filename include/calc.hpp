@@ -13,7 +13,7 @@ public:
         vector<string>commands;
         stringstream sin(m.MessageChain.GetPlainText());
         string temp;
-        while (getline(sin, temp, ';')) {
+        while (getline(sin, temp, ' ')) {
             commands.push_back(temp);
         }
         if (commands.size() == 0)return "";

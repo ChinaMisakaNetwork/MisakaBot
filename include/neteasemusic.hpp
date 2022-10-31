@@ -59,7 +59,7 @@ public:
         stringstream sin((m.MessageChain.GetPlainText()));
         vector<string>commands;
         string temp;
-        while (getline(sin, temp, '#')) {
+        while (getline(sin, temp, ' ')) {
             commands.push_back(temp);
         }
         if (commands.size() == 0)return "";
