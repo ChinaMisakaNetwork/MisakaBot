@@ -52,7 +52,7 @@ public:
 			}
 			if(cmds.size()==3) {
 				if(cmds[1]=="搜用户") {
-					auto res = cpr::Get(cpr::Url{"https://api.bilibili.com/x/space/acc/info?mid="+cmds[2]});
+					auto res = cpr::Get(cpr::Url{ "https://api.bilibili.com/x/space/acc/info?mid=" + cmds[2] }, cpr::Header{{"user-agent","Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36"}});
 					json reply = json::parse(res.text)["data"];
 					string ans = "";
 					ans += "昵称：";
