@@ -32,7 +32,7 @@ public:
 	bool checkperm(const int& groupid, const int& qq) {
 		query << "select * from qqadmin where groupid =" << mysqlpp::quote << to_string(groupid) << " and adminqq =" << mysqlpp::quote << to_string(qq);
 		mysqlpp::StoreQueryResult res=query.store();
-		return res;
+		return !res.empty();
 	}
 	string grantperm(const int& groupid, const int& qq) {
 		query.reset();

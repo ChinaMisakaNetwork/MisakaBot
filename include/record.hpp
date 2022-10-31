@@ -1,31 +1,24 @@
-#include <mirai.h>
+ï»¿#include <mirai.h>
 #include <bits/extc++.h>
 using namespace std;
 using namespace Cyan;
 class recorder{
 protected:
 public:
-	struct identifier
-	{
-		GID_t gid;
-		QQ_t qq;
-		time_t time;
-	};
 	void handler(GroupMessage m, map<int, mutex>& fslock)
 	{
 		string s = m.MessageChain.GetPlainText();
 		fslock[m.Sender.Group.GID.ToInt64()].lock();
-		fs.open("chatrecord/" + to_string(m.Sender.Group.GID.ToInt64()) + ".txt");
+		fs.open("chatrecord/" + to_string(m.Sender.Group.GID.ToInt64()) + ".txt",ios::app);
 		if (!fs.good())
 		{
-			string temp = "chatrecord/" + to_string(m.Sender.Group.GID.ToInt64());
+			string temp = "chatrecord/";
 			system(temp.c_str());
 			fs.open("chatrecord/" + to_string(m.Sender.Group.GID.ToInt64()) + ".txt");
 		}
-		fs << "Ê±¼ä´Á£º" << m.MessageChain.Timestamp() << " ·¢ËÍÕß£º" << m.Sender.QQ.ToInt64() << " ÄÚÈÝ£º" << s << endl;
+		fs << "æ—¶é—´æˆ³ï¼š" << m.MessageChain.Timestamp() << " å‘é€è€…ï¼š" << m.Sender.QQ.ToInt64() << " å†…å®¹ï¼š" << s << endl;
 		fslock[m.Sender.Group.GID.ToInt64()].unlock();
 	}
 private:
 	ofstream fs;
-
 };
