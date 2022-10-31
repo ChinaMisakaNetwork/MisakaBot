@@ -1,4 +1,4 @@
-#include <mirai.h>
+ï»¿#include <mirai.h>
 #include <string>
 #include <cpr/cpr.h>
 using namespace std;
@@ -15,22 +15,22 @@ public:
 			cmds.push_back(temp);
 		}
 		if (cmds.size() == 0)return "";
-		if(*cmds.begin()=="bilibiliËÑË÷"|| *cmds.begin()=="ßÙÁ¨ßÙÁ¨ËÑË÷" || *cmds.begin()=="BÕ¾ËÑË÷") {
+		if(*cmds.begin()=="bilibiliæœç´¢"|| *cmds.begin()=="å“”å“©å“”å“©æœç´¢" || *cmds.begin()=="Bç«™æœç´¢") {
 			if(cmds.size()==2) {
-				if(cmds[1]=="ÈÈÃÅÊÓÆµ") {
+				if(cmds[1]=="çƒ­é—¨è§†é¢‘") {
 					auto res = cpr::Get(cpr::Url{ "https://api.bilibili.com/x/web-interface/popular?ps=1&pn=1" });
 					json data = json::parse(res.text);
 					json reply = data["data"]["list"][0];
 					string ans = "";
-					ans += "·ÖÇø£º";
+					ans += "åˆ†åŒºï¼š";
 					ans += reply["tname"].get<string>();
 					ans += '\n';
-					ans += "±êÌâ£º";
+					ans += "æ ‡é¢˜ï¼š";
 					ans += reply["title"].get<string>();
 					ans += '\n';
-					ans += "¼ò½é£º";
+					ans += "ç®€ä»‹ï¼š";
 					ans += reply["desc"].get<string>();
-					ans += "ÊÓÆµÁ´½Ó£º";
+					ans += "è§†é¢‘é“¾æ¥ï¼š";
 					ans += reply["short_link_v2"].get<string>();
 					return ans;
 				}
@@ -38,41 +38,41 @@ public:
 					auto res = cpr::Get(cpr::Url{ "https://api.bilibili.com/x/web-interface/view?bvid=" + cmds[1] });
 					json reply = json::parse(res.text)["data"];
 					string ans = "";
-					ans += "·ÖÇø£º";
+					ans += "åˆ†åŒºï¼š";
 					ans += reply["tname"].get<string>();
 					ans += '\n';
-					ans += "±êÌâ£º";
+					ans += "æ ‡é¢˜ï¼š";
 					ans += reply["title"].get<string>();
 					ans += '\n';
-					ans += "¼ò½é£º";
+					ans += "ç®€ä»‹ï¼š";
 					ans += reply["desc"].get<string>();
 					return ans;
 				}
-				return "¸ñÊ½´íÎó£¬Çë¼ì²éÊäÈë";
+				return "æ ¼å¼é”™è¯¯ï¼Œè¯·æ£€æŸ¥è¾“å…¥";
 			}
 			if(cmds.size()==3) {
-				if(cmds[1]=="ËÑÓÃ»§") {
+				if(cmds[1]=="æœç”¨æˆ·") {
 					auto res = cpr::Get(cpr::Url{"https://api.bilibili.com/x/space/acc/info?mid="+cmds[2]});
 					json reply = json::parse(res.text)["data"];
 					string ans = "";
-					ans += "êÇ³Æ£º";
+					ans += "æ˜µç§°ï¼š";
 					ans += reply["name"].get<string>();
 					ans += '\n';
-					ans += "ĞÔ±ğ£º";
+					ans += "æ€§åˆ«ï¼š";
 					ans += reply["sex"].get<string>();
 					ans += '\n';
-					ans += "µÈ¼¶£º";
+					ans += "ç­‰çº§ï¼š";
 					ans += to_string(reply["level"].get<int>());
 					ans += '\n';
-					ans += "Ó²±Ò¸öÊı£º";
+					ans += "ç¡¬å¸ä¸ªæ•°ï¼š";
 					ans += to_string(reply["coins"].get<int>());
 					ans += '\n';
-					ans += "ÉúÈÕ£º";
+					ans += "ç”Ÿæ—¥ï¼š";
 					ans += reply["birthday"].get<string>();
 					return ans;
 				}
 			}
-			return "¸ñÊ½´íÎó£¬Çë¼ì²éÊäÈë";
+			return "æ ¼å¼é”™è¯¯ï¼Œè¯·æ£€æŸ¥è¾“å…¥";
 		}
 		return "";
 	}
