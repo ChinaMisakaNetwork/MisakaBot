@@ -8,12 +8,6 @@ sudo apt install cmake systemtap-sdt-dev -y --force-yes -qq;
 cd /tmp;
 wget https://dev.mysql.com/get/Downloads/Connector-C++/libmysqlcppconn9_8.0.31-1ubuntu22.10_amd64.deb;
 sudo dpkg -i libmysqlcppconn9_8.0.31-1ubuntu22.10_amd64.deb;
-cd /usr/lib/x86_64-linux-gnu/
-sudo ln -s libmysqlclient.so libmysqlclient_r.so
-sudo ln -s /usr/include/x86_64-linux-gnu/sys/ /usr/include/
-sudo ls /usr/include/
-sudo ls /usr/include/x86_64-linux-gnu
-sudo ls /usr/include/x86_64-linux-gnu/sys/
 cd /tmp
 wget https://tangentsoft.com/mysqlpp/releases/mysql++-3.3.0.tar.gz;
 tar -zxvf mysql++-3.3.0.tar.gz;
