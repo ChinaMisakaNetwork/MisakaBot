@@ -21,9 +21,6 @@ endif(MSVC)
 add_executable(${PROJECT_NAME} src/main.cpp)
 # 设置头文件目录
 include_directories(include)
-include_directories("/usr/include/mysql++")
-include_directories("/usr/include/mysql")
-include_directories("/usr/include/x86_64-linux-gnu/")
 # 链接 mirai-cpp
 target_link_libraries(${PROJECT_NAME} PRIVATE mirai-cpp)
 target_link_libraries(${PROJECT_NAME} PRIVATE cpr)
