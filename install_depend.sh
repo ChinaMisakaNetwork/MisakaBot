@@ -3,7 +3,7 @@ sudo apt upgrade -y --force-yes -qq;
 sudo apt install g++ gcc -y --force-yes -qq;
 sudo apt install mysql-server -y --force-yes -qq;
 sudo apt install libmysql++-dev -y --force-yes -qq;
-sudo apt install cmake -y --force-yes -qq;
+sudo apt install cmake systemtap-sdt-dev -y --force-yes -qq;
 cd /tmp;
 wget https://dev.mysql.com/get/Downloads/Connector-C++/libmysqlcppconn9_8.0.31-1ubuntu22.10_amd64.deb;
 sudo dpkg -i libmysqlcppconn9_8.0.31-1ubuntu22.10_amd64.deb;
