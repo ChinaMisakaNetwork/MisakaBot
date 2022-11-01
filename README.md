@@ -55,7 +55,10 @@ bash install.sh
 
 参考 http://www.partow.net/programming/exprtk/index.html
 
-6.聊天记录（TODO）
+6.天气预报
+```
+格式：查询天气 $城市
+```
 
 7.入群欢迎（请编辑配置文件）
 
