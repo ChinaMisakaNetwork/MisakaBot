@@ -1,3 +1,6 @@
+mkdir build
 git submodule update --init --force --remote
-sudo cmake .
+cd build
+sudo make clean
+sudo cmake ..
 sudo make 
