@@ -15,6 +15,5 @@ tar -zxvf mysql++-3.3.0.tar.gz;
 ln -s /usr/local/mysql/lib/mysql/libmysqlclient.so.15.0.0 /usr/local/mysql/lib/mysql/libmysqlclient_r.so
 cd mysql++-3.3.0
 sudo ./configure --prefix=/usr --prefix=/usr/local --enable-thread-check LDFLAGS='-pthread'
-cat /home/runner/work/MisakaBot/MisakaBot/build/CMakeFiles/CMakeError.log
 mv Makefile.simple Makefile;
 sudo make install
