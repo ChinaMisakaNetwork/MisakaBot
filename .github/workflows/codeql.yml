@@ -60,7 +60,8 @@ jobs:
         echo "Installing Dependencies"
         ./install_depend.sh
         echo "Compiling"
-        ./install.sh
+        cmake .
+        make
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v2
