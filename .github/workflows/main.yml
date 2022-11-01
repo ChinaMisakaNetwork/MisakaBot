@@ -1,0 +1,23 @@
+name: Build Test
+on:
+  push:
+    branches:
+      - master
+jobs:
+  Install_Depend :
+    name: Install Dependcies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Depend
+        run: |
+          ./install_depend.sh
+  Install:
+    name: Install
+    runs-on: ubuntu-latest
+    needs:
+      Install_Depend
+    steps:
+      - name: Install
+        run: |
+          ./install.sh
+        
