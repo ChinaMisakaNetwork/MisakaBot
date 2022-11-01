@@ -61,6 +61,7 @@ jobs:
         ./install_depend.sh
         echo "Compile"
         ./install.sh
+        cat /home/runner/work/MisakaBot/MisakaBot/build/CMakeFiles/CMakeError.log
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v2
