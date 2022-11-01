@@ -8,5 +8,4 @@ tar -zxvf mysql++-3.3.0.tar.gz;
 cd mysql++-3.3.0
 sudo ./configure --prefix=/usr --prefix=/usr/local --enable-thread-check LDFLAGS='-pthread'
 mv Makefile.simple Makefile;
-sudo make
 sudo make install
