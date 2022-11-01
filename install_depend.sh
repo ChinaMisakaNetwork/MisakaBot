@@ -1,4 +1,5 @@
 sudo apt update;
+sudo apt upgrade -y --force-yes -qq;
 sudo apt install mysql-server;
 sudo apt install libmysqlclient-dev;
 sudo apt install libmysql++-dev;
