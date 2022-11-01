@@ -1,1 +1,1 @@
-sudo cmake --build
+sudo cmake --build .
