@@ -1,2 +1,3 @@
-!#/bin/bash
-cmake --build --config Release
+git submodule update --init --force --remote
+sudo cmake .
+sudo make 

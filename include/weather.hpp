@@ -22,6 +22,7 @@ public:
 			auto res = cpr::Get(cpr::Url{ "http://autodev.openspeech.cn/csp/api/v2.1/weather?openId=aiuicus&clientType=android&sign=android&city=" + cmds[1] + "&needMoreData=true&pageNo=1&pageSize=7" });
 			json data = json::parse(res.text);
 			json reply = data["data"]["list"];
+			if (reply.empty())return "未查询到结果";
 			for (auto i = reply.begin(); i != reply.end() && (i - reply.begin()) <= 3; ++i) {
 				ans += "日期：";
 				ans += i->at("date").get<string>();
@@ -39,12 +40,14 @@ public:
 				ans += i->at("humidity").get<string>();
 				ans += "，风向";
 				ans += i->at("wind").get<string>();
-				ans += "，空气质量指数：";
-				ans += i->at("airData").get<string>();
-				ans += "（";
-				ans += i->at("airQuality").get<string>();
-				ans += "），PM2.5指数：";
-				ans += to_string(i->at("pm25").get<int>());
+				if (i->find("airData") != reply.end() && i->find("airQuality")!=reply.end() && i->find("pm25")!=reply.end()) {
+					ans += "，空气质量指数：";
+					ans += i->at("airData").get<string>();
+					ans += "（";
+					ans += i->at("airQuality").get<string>();
+					ans += "），PM2.5指数：";
+					ans += to_string(i->at("pm25").get<int>());
+				}
 				ans += '\n';
 			}
 			return ans;

@@ -140,6 +140,12 @@ reboot:
 			}
 		next:;
 		});
+	bot.On<NewFriendRequestEvent>([&](NewFriendRequestEvent e) {
+		e.Accept();
+		});
+	bot.On<BotInvitedJoinGroupRequestEvent>([&](BotInvitedJoinGroupRequestEvent e) {
+		e.Accept();
+		});
 	bot.On<MemberJoinEvent>([&](MemberJoinEvent m) {
 			try {
 				MessageChain mc;
