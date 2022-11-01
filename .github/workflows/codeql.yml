@@ -57,6 +57,7 @@ jobs:
     # If this step fails, then you should remove it and run the build manually (see below)
     - name: Autobuild
       run: |
+        git submodule update --init --force --remote
         echo "Installing Dependencies"
         ./install_depend.sh
         echo "Compiling"
