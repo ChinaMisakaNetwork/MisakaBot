@@ -3,6 +3,7 @@
 #include <fstream>
 #include <mirai.h>
 #include <mysql++.h>
+#include <cpr/cpr.h>
 #include <mutex>
 #include "administrative.hpp"
 #include "deniedwords.hpp"
@@ -44,7 +45,7 @@ string handle_message(GroupMessage& m,const db_info& dbf,GroupImage& img,const s
 	if (!res.empty())return res;
 	return "";
 }
-string handle_message(GroupMessage m,db_info dbf) {
+string handle_message(GroupMessage m,db_info dbf,const string& deepai_key,const double& nsfw_value) {
 	administrative admin(dbf);
 	deniedwords dw(dbf);
 	calc calculator;
@@ -62,7 +63,7 @@ string handle_message(GroupMessage m,db_info dbf) {
 	if (!res.empty())return res;
 	res = cmd.handler(m);
 	if (!res.empty())return res;
-	res = checker.handler(m, ACer, wordcheck_list);
+	res = checker.handler(m, ACer, wordcheck_list, deepai_key,nsfw_value);
 	if (!res.empty())return res;
 	return "";
 }
@@ -75,6 +76,7 @@ reboot:
 	SessionOptions opts;
 	ifstream fin;
 	ofstream fout;
+	double nsfw_value;
 	string deepai_key;
 	db_info db_information;
 	string welcomemessage = "";
@@ -84,7 +86,7 @@ reboot:
 		fout.open("/etc/MisakaBot/MisakaBot.conf");
 		if(!fout.good())system("mkdir /etc/MisakaBot");
 		fout.open("/etc/MisakaBot/MisakaBot.conf");
-		fout << "BotQQ=12345678" << endl << "HttpHostname=localhost" << endl << "WebSocketHostname=localhost" << endl << "HttpPort=8080" << endl << "WebSocketPort=8080" << endl << "VerifyKey=VerifyKey" << endl << "MySQLdatabase=DatabaseName" <<endl << "MySQLaddress=localhost" << endl << "MySQLusername=username" << endl << "MySQLpassword=password" << endl << "MySQLconnectPort=3306"<<endl<<"入群欢迎词=欢迎词"<<endl<<"DeepaiKey=Key";
+		fout << "BotQQ=12345678" << endl << "HttpHostname=localhost" << endl << "WebSocketHostname=localhost" << endl << "HttpPort=8080" << endl << "WebSocketPort=8080" << endl << "VerifyKey=VerifyKey" << endl << "MySQLdatabase=DatabaseName" <<endl << "MySQLaddress=localhost" << endl << "MySQLusername=username" << endl << "MySQLpassword=password" << endl << "MySQLconnectPort=3306"<<endl<<"入群欢迎词=欢迎词"<<endl<<"DeepaiKey=Key"<<endl<<"nsfw_value=0.75";
 		cout << "Conf created at /etc/MisakaBot/MisakaBot.conf , please edit it and restart the Bot." << endl;
 		return 1;
 	}
@@ -111,6 +113,8 @@ reboot:
 		db_information.port = atoi(conf[10].c_str());
 		welcomemessage = conf[11];
 		deepai_key = conf[12];
+		nsfw_value = atof(conf[13].c_str());
+		if (deepai_key.empty())deepai_key = "quickstart-QUdJIGlzIGNvbWluZy4uLi4K";
 		wordchecker wordchecker_init(db_information);
 		wordchecker_init.init(ACer,wordcheck_list,ACer_lock,wordcheck_list_lock);
 	}
@@ -152,7 +156,7 @@ reboot:
 				MessageChain mc;
 				GroupImage img;
 				VoiceMessage vc;
-				result = handle_message(m, db_information);
+				result = handle_message(m, db_information,deepai_key,nsfw_value);
 				if (!result.empty()) {
 					mc.At(m.Sender.QQ);
 					mc.Add<PlainMessage>(result);

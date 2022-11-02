@@ -56,7 +56,7 @@ public:
 			}
 		}
 		//Text To Image
-		if (m.MessageChain.GetPlainText() == "AI作图") {
+		if (m.MessageChain.GetPlainText() == "AI画图") {
 			if (commands.size() != 2)return "请检查格式";
 			try {
 				auto res = cpr::Post(cpr::Url{ "https://api.deepai.org/api/text2img" },
