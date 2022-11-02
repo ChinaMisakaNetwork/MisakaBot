@@ -43,6 +43,8 @@ string handle_message(GroupMessage& m,const db_info& dbf,GroupImage& img,const s
 	if (!res.empty())return res;
 	res = bz.handler(m);
 	if (!res.empty())return res;
+	res = pic.handler(m,img);
+	if (!res.empty())return res;
 	return "";
 }
 string handle_message(GroupMessage m,db_info dbf,const string& deepai_key,const double& nsfw_value) {
