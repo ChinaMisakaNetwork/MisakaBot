@@ -14,6 +14,7 @@
 #include "neteasemusic.hpp"
 #include "weather.hpp"
 #include "record.hpp"
+#include "picture.hpp"
 #include "bilibili.hpp"
 using namespace std;
 using namespace Cyan;
@@ -21,13 +22,14 @@ map<int, TrieAc>ACer;
 map<int, bool>wordcheck_list;
 mutex ACer_lock, wordcheck_list_lock;
 map<int, mutex>fslock;
-string handle_message(GroupMessage m,db_info dbf,GroupImage& img) {
+string handle_message(GroupMessage& m,const db_info& dbf,GroupImage& img,const string& deepai_key) {
 	neteasemusic music;
 	chatobj chat(dbf);
 	weather wt;
 	bilibili bz;
 	hitokoto htkt;
 	recorder rcer;
+	deepai_picture pic(deepai_key);
 	rcer.handler(m, fslock);
 	string res = "";
 	res = chat.handler(m, img);
@@ -73,6 +75,7 @@ reboot:
 	SessionOptions opts;
 	ifstream fin;
 	ofstream fout;
+	string deepai_key;
 	db_info db_information;
 	string welcomemessage = "";
 	fin.open("/etc/MisakaBot/MisakaBot.conf");
@@ -81,7 +84,7 @@ reboot:
 		fout.open("/etc/MisakaBot/MisakaBot.conf");
 		if(!fout.good())system("mkdir /etc/MisakaBot");
 		fout.open("/etc/MisakaBot/MisakaBot.conf");
-		fout << "BotQQ=12345678" << endl << "HttpHostname=localhost" << endl << "WebSocketHostname=localhost" << endl << "HttpPort=8080" << endl << "WebSocketPort=8080" << endl << "VerifyKey=VerifyKey" << endl << "MySQLdatabase=DatabaseName" <<endl << "MySQLaddress=localhost" << endl << "MySQLusername=username" << endl << "MySQLpassword=password" << endl << "MySQLconnectPort=3306"<<endl<<"入群欢迎词=欢迎词";
+		fout << "BotQQ=12345678" << endl << "HttpHostname=localhost" << endl << "WebSocketHostname=localhost" << endl << "HttpPort=8080" << endl << "WebSocketPort=8080" << endl << "VerifyKey=VerifyKey" << endl << "MySQLdatabase=DatabaseName" <<endl << "MySQLaddress=localhost" << endl << "MySQLusername=username" << endl << "MySQLpassword=password" << endl << "MySQLconnectPort=3306"<<endl<<"入群欢迎词=欢迎词"<<endl<<"DeepaiKey=Key";
 		cout << "Conf created at /etc/MisakaBot/MisakaBot.conf , please edit it and restart the Bot." << endl;
 		return 1;
 	}
@@ -107,6 +110,7 @@ reboot:
 		db_information.db_password = conf[9];
 		db_information.port = atoi(conf[10].c_str());
 		welcomemessage = conf[11];
+		deepai_key = conf[12];
 		wordchecker wordchecker_init(db_information);
 		wordchecker_init.init(ACer,wordcheck_list,ACer_lock,wordcheck_list_lock);
 	}
@@ -129,7 +133,7 @@ reboot:
 				MessageChain mc;
 				GroupImage img;
 				VoiceMessage vc;
-				result = handle_message(m, db_information, img);
+				result = handle_message(m, db_information, img,deepai_key);
 				if (!result.empty()) {
 					mc.At(m.Sender.QQ);
 					mc.Add<PlainMessage>(result);
