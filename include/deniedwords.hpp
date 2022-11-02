@@ -8,7 +8,7 @@ class deniedwords :public permchecker{
 private:
     db_info dbinfo;
 public:
-    deniedwords(MiraiBot& source, db_info dbinf) :permchecker(dbinf) {
+    deniedwords(db_info dbinf) :permchecker(dbinf) {
         dbinfo = dbinf;
     }
     string handler(GroupMessage m) {

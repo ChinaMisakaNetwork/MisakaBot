@@ -21,19 +21,33 @@ map<int, TrieAc>ACer;
 map<int, bool>wordcheck_list;
 mutex ACer_lock, wordcheck_list_lock;
 map<int, mutex>fslock;
-string handle_message(GroupMessage m,MiraiBot& bot,db_info dbf,GroupImage& img) {
-	administrative admin(dbf);
-	deniedwords dw(bot, dbf);
+string handle_message(GroupMessage m,db_info dbf,GroupImage& img) {
 	neteasemusic music;
 	chatobj chat(dbf);
 	weather wt;
-	calc calculator;
 	bilibili bz;
-	commands cmd(dbf);
-	wordchecker checker(dbf);
 	hitokoto htkt;
 	recorder rcer;
 	rcer.handler(m, fslock);
+	string res = "";
+	res = chat.handler(m, img);
+	if (!res.empty())return res;
+	res = htkt.handler(m,img);
+	if (!res.empty())return res;
+	res = music.handler(m);
+	if (!res.empty())return res;
+	res = wt.handler(m);
+	if (!res.empty())return res;
+	res = bz.handler(m);
+	if (!res.empty())return res;
+	return "";
+}
+string handle_message(GroupMessage m,db_info dbf) {
+	administrative admin(dbf);
+	deniedwords dw(dbf);
+	calc calculator;
+	wordchecker checker(dbf);
+	commands cmd(dbf);
 	string res = "";
 	res = admin.handler(m);
 	if (!res.empty())return res;
@@ -46,17 +60,7 @@ string handle_message(GroupMessage m,MiraiBot& bot,db_info dbf,GroupImage& img) 
 	if (!res.empty())return res;
 	res = cmd.handler(m);
 	if (!res.empty())return res;
-	res = checker.handler(m,ACer,wordcheck_list);
-	if (!res.empty())return res;
-	res = chat.handler(m, img);
-	if (!res.empty())return res;
-	res = htkt.handler(m,img);
-	if (!res.empty())return res;
-	res = music.handler(m);
-	if (!res.empty())return res;
-	res = wt.handler(m);
-	if (!res.empty())return res;
-	res = bz.handler(m);
+	res = checker.handler(m, ACer, wordcheck_list);
 	if (!res.empty())return res;
 	return "";
 }
@@ -88,7 +92,6 @@ reboot:
 			for (auto i = temp.begin(); i != temp.end(); ++i) {
 				if (*i == '=') {
 					conf.push_back(string(i+1,temp.end()));
-					continue;
 				}
 			}
 		}
@@ -126,19 +129,36 @@ reboot:
 				MessageChain mc;
 				GroupImage img;
 				VoiceMessage vc;
-				result = handle_message(m, bot, db_information, img);
+				result = handle_message(m, db_information, img);
 				if (!result.empty()) {
 					mc.At(m.Sender.QQ);
 					mc.Add<PlainMessage>(result);
 					mc.Image(img);
 					bot.SendMessage(m.Sender.Group.GID, mc);
-					goto next;
 				}
 			}
 			catch (const std::exception& ex){
 				cout << ex.what() << endl;
 			}
-		next:;
+		});
+	bot.On<GroupMessage>(
+		[&](GroupMessage m) {
+			try {
+				string result = "";
+				MessageChain mc;
+				GroupImage img;
+				VoiceMessage vc;
+				result = handle_message(m, db_information);
+				if (!result.empty()) {
+					mc.At(m.Sender.QQ);
+					mc.Add<PlainMessage>(result);
+					mc.Image(img);
+					bot.SendMessage(m.Sender.Group.GID, mc);
+				}
+			}
+			catch (const std::exception& ex) {
+				cout << ex.what() << endl;
+			}
 		});
 	bot.On<NewFriendRequestEvent>([&](NewFriendRequestEvent e) {
 		e.Accept();
