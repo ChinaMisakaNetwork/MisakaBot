@@ -24,9 +24,9 @@ public:
 			try {
 				auto res = cpr::Post(cpr::Url{ "https://api.deepai.org/api/colorizer" },
 					cpr::Multipart{
-						{"image",m.MessageChain.GetFirst<GroupImage>().Url},
-						{"api_key",api_key}
-					}
+						{"image",m.MessageChain.GetFirst<MiraiImage>().Url},
+					},
+					cpr::Header{ {"api_key",api_key}, {"user-agent","Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36"} }
 				);
 				json reply = json::parse(res.text);
 				img.Url = reply["output_url"].get<string>();
@@ -42,9 +42,9 @@ public:
 			try {
 				auto res = cpr::Post(cpr::Url{ "https://api.deepai.org/api/super-resolution" },
 					cpr::Multipart{
-						{"image",m.MessageChain.GetFirst<GroupImage>().Url},
-						{"api_key",api_key}
-					}
+						{"image",m.MessageChain.GetFirst<MiraiImage>().Url},
+					},
+					cpr::Header{ {"api_key",api_key},{"user-agent","Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36"} }
 				);
 				json reply = json::parse(res.text);
 				img.Url = reply["output_url"].get<string>();
@@ -56,16 +56,18 @@ public:
 			}
 		}
 		//Text To Image
-		if (m.MessageChain.GetPlainText() == "AI画图") {
+		if (*commands.begin() == "AI画图") {
 			if (commands.size() != 2)return "请检查格式";
 			try {
 				auto res = cpr::Post(cpr::Url{ "https://api.deepai.org/api/text2img" },
 					cpr::Multipart{
-						{"text",commands[1]},
-						{"api_key",api_key}
-					}
+						{"text",commands[1]}
+						
+					},
+					cpr::Header{ {"api_key",api_key},{"user-agent","Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36"} }
 				);
 				json reply = json::parse(res.text);
+				cout << res.text << endl;
 				img.Url = reply["output_url"].get<string>();
 				return "结果如下：";
 			}

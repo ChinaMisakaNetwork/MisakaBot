@@ -64,8 +64,8 @@ public:
 		//Image nsfw check
 		try {
 			auto res = cpr::Post(cpr::Url{ "https://api.deepai.org/api/nsfw-detector" },
-				cpr::Header{ {"api-key",deepai_key} },
-				cpr::Multipart{ {"image",m.MessageChain.GetFirst<GroupImage>().Url} });
+				cpr::Header{ {"api-key",deepai_key} ,{"user-agent","Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36"} },
+				cpr::Multipart{ {"image",m.MessageChain.GetFirst<MiraiImage>().Url} });
 			json reply = json::parse(res.text);
 			double score = reply["output"]["nsfw_score"].get<double>();
 			if(score>=nsfw_value) {
