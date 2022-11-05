@@ -1,4 +1,5 @@
-﻿#include <mirai.h>
+﻿#pragma once
+#include <mirai.h>
 #include <string>
 #include "admin.hpp"
 #include "autoac.hpp"
@@ -8,7 +9,7 @@ class deniedwords :public permchecker{
 private:
     db_info dbinfo;
 public:
-    deniedwords(MiraiBot& source, db_info dbinf) :permchecker(dbinf) {
+    deniedwords(db_info dbinf) :permchecker(dbinf) {
         dbinfo = dbinf;
     }
     string handler(GroupMessage m) {

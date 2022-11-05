@@ -3,7 +3,9 @@
 #include <fstream>
 #include <mirai.h>
 #include <mysql++.h>
+#include <cpr/cpr.h>
 #include <mutex>
+#include <string>
 #include "administrative.hpp"
 #include "deniedwords.hpp"
 #include "calc.hpp"
@@ -14,6 +16,7 @@
 #include "neteasemusic.hpp"
 #include "weather.hpp"
 #include "record.hpp"
+#include "picture.hpp"
 #include "bilibili.hpp"
 using namespace std;
 using namespace Cyan;
@@ -21,19 +24,36 @@ map<int, TrieAc>ACer;
 map<int, bool>wordcheck_list;
 mutex ACer_lock, wordcheck_list_lock;
 map<int, mutex>fslock;
-string handle_message(GroupMessage m,MiraiBot& bot,db_info dbf,GroupImage& img) {
-	administrative admin(dbf);
-	deniedwords dw(bot, dbf);
+string handle_message(GroupMessage& m,const db_info& dbf,GroupImage& img,const string& deepai_key) {
 	neteasemusic music;
 	chatobj chat(dbf);
 	weather wt;
-	calc calculator;
 	bilibili bz;
-	commands cmd(dbf);
-	wordchecker checker(dbf);
 	hitokoto htkt;
 	recorder rcer;
+	deepai_picture pic(deepai_key);
 	rcer.handler(m, fslock);
+	string res = "";
+	res = chat.handler(m, img);
+	if (!res.empty())return res;
+	res = htkt.handler(m,img);
+	if (!res.empty())return res;
+	res = music.handler(m);
+	if (!res.empty())return res;
+	res = wt.handler(m);
+	if (!res.empty())return res;
+	res = bz.handler(m);
+	if (!res.empty())return res;
+	res = pic.handler(m, img);
+	if (!res.empty())return res;
+	return "";
+}
+string handle_message(GroupMessage m,db_info dbf,const string& deepai_key,const double& nsfw_value) {
+	administrative admin(dbf);
+	deniedwords dw(dbf);
+	calc calculator;
+	wordchecker checker(dbf);
+	commands cmd(dbf);
 	string res = "";
 	res = admin.handler(m);
 	if (!res.empty())return res;
@@ -46,17 +66,7 @@ string handle_message(GroupMessage m,MiraiBot& bot,db_info dbf,GroupImage& img) 
 	if (!res.empty())return res;
 	res = cmd.handler(m);
 	if (!res.empty())return res;
-	res = checker.handler(m,ACer,wordcheck_list);
-	if (!res.empty())return res;
-	res = chat.handler(m, img);
-	if (!res.empty())return res;
-	res = htkt.handler(m,img);
-	if (!res.empty())return res;
-	res = music.handler(m);
-	if (!res.empty())return res;
-	res = wt.handler(m);
-	if (!res.empty())return res;
-	res = bz.handler(m);
+	res = checker.handler(m, ACer, wordcheck_list, deepai_key, nsfw_value);
 	if (!res.empty())return res;
 	return "";
 }
@@ -69,6 +79,9 @@ reboot:
 	SessionOptions opts;
 	ifstream fin;
 	ofstream fout;
+	double nsfw_value;
+	string deepai_key;
+	string deepai_generator;
 	db_info db_information;
 	string welcomemessage = "";
 	fin.open("/etc/MisakaBot/MisakaBot.conf");
@@ -77,7 +90,7 @@ reboot:
 		fout.open("/etc/MisakaBot/MisakaBot.conf");
 		if(!fout.good())system("mkdir /etc/MisakaBot");
 		fout.open("/etc/MisakaBot/MisakaBot.conf");
-		fout << "BotQQ=12345678" << endl << "HttpHostname=localhost" << endl << "WebSocketHostname=localhost" << endl << "HttpPort=8080" << endl << "WebSocketPort=8080" << endl << "VerifyKey=VerifyKey" << endl << "MySQLdatabase=DatabaseName" <<endl << "MySQLaddress=localhost" << endl << "MySQLusername=username" << endl << "MySQLpassword=password" << endl << "MySQLconnectPort=3306"<<endl<<"入群欢迎词=欢迎词";
+		fout << "BotQQ=12345678" << endl << "HttpHostname=localhost" << endl << "WebSocketHostname=localhost" << endl << "HttpPort=8080" << endl << "WebSocketPort=8080" << endl << "VerifyKey=VerifyKey" << endl << "MySQLdatabase=DatabaseName" << endl << "MySQLaddress=localhost" << endl << "MySQLusername=username" << endl << "MySQLpassword=password" << endl << "MySQLconnectPort=3306" << endl << "入群欢迎词=欢迎词" << endl << "DeepaiKey=Key" << endl << "nsfw_value=0.75" << endl << "APIGeneratorURL=URL";;
 		cout << "Conf created at /etc/MisakaBot/MisakaBot.conf , please edit it and restart the Bot." << endl;
 		return 1;
 	}
@@ -88,7 +101,6 @@ reboot:
 			for (auto i = temp.begin(); i != temp.end(); ++i) {
 				if (*i == '=') {
 					conf.push_back(string(i+1,temp.end()));
-					continue;
 				}
 			}
 		}
@@ -97,19 +109,23 @@ reboot:
 		opts.WebSocketHostname = conf[2];	// 同上
 		opts.HttpPort = stoi(conf[3]);					// 同上
 		opts.WebSocketPort = stoi(conf[4]);				// 同上
-		opts.VerifyKey = conf[5];			// 同上
+		opts.VerifyKey = conf[5];
+		opts.ThreadPoolSize = 6;// 同上
 		db_information.db_name = conf[6];
 		db_information.db_addr = conf[7];
 		db_information.db_username = conf[8];
 		db_information.db_password = conf[9];
 		db_information.port = atoi(conf[10].c_str());
 		welcomemessage = conf[11];
+		deepai_key = conf[12];
+		nsfw_value = atof(conf[13].c_str());
+		deepai_generator = conf[14];
 		wordchecker wordchecker_init(db_information);
 		wordchecker_init.init(ACer,wordcheck_list,ACer_lock,wordcheck_list_lock);
 	}
 	while (true){
 		try{
-			cout << "Trying to establish the connection..." << endl;
+			cout << "尝试连接指定的Bot…" << endl;
 			bot.Connect(opts);
 			break;
 		}
@@ -118,7 +134,7 @@ reboot:
 		}
 		MiraiBot::SleepSeconds(1);
 	}
-	cout << "Bot Working..." << endl;
+	cout << "连接成功，正在运行中…" << endl;
 	bot.On<GroupMessage>(
 		[&](GroupMessage m){
 			try{
@@ -126,19 +142,36 @@ reboot:
 				MessageChain mc;
 				GroupImage img;
 				VoiceMessage vc;
-				result = handle_message(m, bot, db_information, img);
+				result = handle_message(m, db_information, img,deepai_key);
 				if (!result.empty()) {
 					mc.At(m.Sender.QQ);
 					mc.Add<PlainMessage>(result);
 					mc.Image(img);
 					bot.SendMessage(m.Sender.Group.GID, mc);
-					goto next;
 				}
 			}
 			catch (const std::exception& ex){
 				cout << ex.what() << endl;
 			}
-		next:;
+		});
+	bot.On<GroupMessage>(
+		[&](GroupMessage m) {
+			try {
+				string result = "";
+				MessageChain mc;
+				GroupImage img;
+				VoiceMessage vc;
+				result = handle_message(m, db_information,deepai_key,nsfw_value);
+				if (!result.empty()) {
+					mc.At(m.Sender.QQ);
+					mc.Add<PlainMessage>(result);
+					mc.Image(img);
+					bot.SendMessage(m.Sender.Group.GID, mc);
+				}
+			}
+			catch (const std::exception& ex) {
+				cout << ex.what() << endl;
+			}
 		});
 	bot.On<NewFriendRequestEvent>([&](NewFriendRequestEvent e) {
 		e.Accept();
@@ -159,9 +192,9 @@ reboot:
 			while (true)
 			{
 				try{
-					cout << "Trying to establish the connection..." << endl;
+					cout << "尝试重新连接，请稍候…" << endl;
 					bot.Reconnect();
-					cout << "Reconnected." << endl;
+					cout << "重新连接成功" << endl;
 					break;
 				}
 				catch (const std::exception& ex){
@@ -229,6 +262,15 @@ reboot:
 			}
 			permchecker db(db_information);
 			string res = db.grantperm(atoi(commands[1].c_str()), atoi(commands[2].c_str()));
+			cout << res << endl;
+		}
+		if (*commands.begin() == "删除管理员") {
+			if (commands.size() != 3) {
+				cout << "格式错误" << endl;
+				goto cont;
+			}
+			permchecker db(db_information);
+			string res = db.deperm(atoi(commands[1].c_str()), atoi(commands[2].c_str()));
 			cout << res << endl;
 		}
 	cont:;

@@ -1,4 +1,5 @@
-﻿#include "exprtk.hpp"
+﻿#pragma once
+#include "exprtk.hpp"
 #include <mirai.h>
 #include <vector>
 #include <string>

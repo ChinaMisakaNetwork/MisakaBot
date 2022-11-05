@@ -1,3 +1,4 @@
+#pragma once
 /*
  ******************************************************************
  *           C++ Mathematical Expression Toolkit Library          *
