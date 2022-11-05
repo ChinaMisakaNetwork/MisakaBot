@@ -1,4 +1,5 @@
-﻿#include <vector>
+﻿#pragma once
+#include <vector>
 #include <mirai.h>
 #include <map>
 #include <cpr/cpr.h>
@@ -10,7 +11,6 @@ using namespace Cyan;
 class wordchecker :public permchecker{
 private:
 	db_info dbinf;
-	
 public:
 	wordchecker(db_info dbinf1) :permchecker(dbinf1) {
 		dbinf = dbinf1;
@@ -43,7 +43,7 @@ public:
 		ACer_lock.unlock();
 		wordcheck_list_lock.unlock();
 	}
-	string handler(GroupMessage m, map<int, TrieAc>& ACer, map<int, bool>& enabled,const string& deepai_key,const double& nsfw_value) {
+	string handler(GroupMessage m, map<int, TrieAc>& ACer, map<int, bool>& enabled,string deepai_key,const double& nsfw_value) {
 		MiraiBot& bot = m.GetMiraiBot();
 		if (m.MessageChain.GetPlainText().empty())return "";
 		string temp = m.MessageChain.GetPlainText();
@@ -63,15 +63,20 @@ public:
 		}
 		//Image nsfw check
 		try {
-			auto res = cpr::Post(cpr::Url{ "https://api.deepai.org/api/nsfw-detector" },
-				cpr::Header{ {"api-key",deepai_key} ,{"user-agent","Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36"} },
-				cpr::Multipart{ {"image",m.MessageChain.GetFirst<MiraiImage>().Url} });
-			json reply = json::parse(res.text);
-			double score = reply["output"]["nsfw_score"].get<double>();
-			if(score>=nsfw_value) {
-				bot.Recall(m.MessageId(), m.Sender.Group.GID);
-				bot.Mute(m.Sender.Group.GID, m.Sender.QQ, 60);
-				return "您这图片在这发不太合适吧……";
+			if (deepai_key.empty())return "";
+			vector<ImageMessage>mc = m.MessageChain.GetAll<ImageMessage>();
+			for (ImageMessage i : mc) {
+				auto res = cpr::Post(cpr::Url{ "https://api.deepai.org/api/nsfw-detector" },
+					cpr::Payload{ {"image",i.Url()},
+					},
+					cpr::Header{ {"Api-Key",deepai_key} });
+				json reply = json::parse(res.text);
+				double score = reply["output"]["nsfw_score"].get<double>();
+				if (score >= nsfw_value) {
+					bot.Recall(m.MessageId(), m.Sender.Group.GID);
+					bot.Mute(m.Sender.Group.GID, m.Sender.QQ, 60);
+					return "您这图片在这发不太合适吧……";
+				}
 			}
 		}catch(...){}
 		return "";

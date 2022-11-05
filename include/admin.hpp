@@ -45,4 +45,15 @@ public:
 		cout << string(res.info()) << endl;
 		return "出现错误，请查看终端以获取详细信息";
 	}
+	string deperm(const int& groupid, const int& qq) {
+		query.reset();
+		query << "delete from qqadmin where groupid = %0q and adminqq = %1q";
+		query.parse();
+		mysqlpp::SimpleResult res = query.execute(groupid, qq);
+		if (string(res.info()).empty()) {
+			return "已删除";
+		}
+		cout << string(res.info()) << endl;
+		return "出现错误，请查看终端以获取详细信息";
+	}
 };

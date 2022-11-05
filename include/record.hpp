@@ -1,4 +1,5 @@
-﻿#include <mirai.h>
+﻿#pragma once
+#include <mirai.h>
 #include <bits/extc++.h>
 using namespace std;
 using namespace Cyan;
@@ -12,7 +13,7 @@ public:
 		fs.open("chatrecord/" + to_string(m.Sender.Group.GID.ToInt64()) + ".txt",ios::app);
 		if (!fs.good())
 		{
-			string temp = "chatrecord/";
+			string temp = "mkdir chatrecord/";
 			system(temp.c_str());
 			fs.open("chatrecord/" + to_string(m.Sender.Group.GID.ToInt64()) + ".txt");
 		}

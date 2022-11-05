@@ -5,6 +5,7 @@
 #include <mysql++.h>
 #include <cpr/cpr.h>
 #include <mutex>
+#include <string>
 #include "administrative.hpp"
 #include "deniedwords.hpp"
 #include "calc.hpp"
@@ -43,7 +44,7 @@ string handle_message(GroupMessage& m,const db_info& dbf,GroupImage& img,const s
 	if (!res.empty())return res;
 	res = bz.handler(m);
 	if (!res.empty())return res;
-	res = pic.handler(m,img);
+	res = pic.handler(m, img);
 	if (!res.empty())return res;
 	return "";
 }
@@ -65,7 +66,7 @@ string handle_message(GroupMessage m,db_info dbf,const string& deepai_key,const 
 	if (!res.empty())return res;
 	res = cmd.handler(m);
 	if (!res.empty())return res;
-	res = checker.handler(m, ACer, wordcheck_list, deepai_key,nsfw_value);
+	res = checker.handler(m, ACer, wordcheck_list, deepai_key, nsfw_value);
 	if (!res.empty())return res;
 	return "";
 }
@@ -80,6 +81,7 @@ reboot:
 	ofstream fout;
 	double nsfw_value;
 	string deepai_key;
+	string deepai_generator;
 	db_info db_information;
 	string welcomemessage = "";
 	fin.open("/etc/MisakaBot/MisakaBot.conf");
@@ -88,7 +90,7 @@ reboot:
 		fout.open("/etc/MisakaBot/MisakaBot.conf");
 		if(!fout.good())system("mkdir /etc/MisakaBot");
 		fout.open("/etc/MisakaBot/MisakaBot.conf");
-		fout << "BotQQ=12345678" << endl << "HttpHostname=localhost" << endl << "WebSocketHostname=localhost" << endl << "HttpPort=8080" << endl << "WebSocketPort=8080" << endl << "VerifyKey=VerifyKey" << endl << "MySQLdatabase=DatabaseName" <<endl << "MySQLaddress=localhost" << endl << "MySQLusername=username" << endl << "MySQLpassword=password" << endl << "MySQLconnectPort=3306"<<endl<<"入群欢迎词=欢迎词"<<endl<<"DeepaiKey=Key"<<endl<<"nsfw_value=0.75";
+		fout << "BotQQ=12345678" << endl << "HttpHostname=localhost" << endl << "WebSocketHostname=localhost" << endl << "HttpPort=8080" << endl << "WebSocketPort=8080" << endl << "VerifyKey=VerifyKey" << endl << "MySQLdatabase=DatabaseName" << endl << "MySQLaddress=localhost" << endl << "MySQLusername=username" << endl << "MySQLpassword=password" << endl << "MySQLconnectPort=3306" << endl << "入群欢迎词=欢迎词" << endl << "DeepaiKey=Key" << endl << "nsfw_value=0.75" << endl << "APIGeneratorURL=URL";;
 		cout << "Conf created at /etc/MisakaBot/MisakaBot.conf , please edit it and restart the Bot." << endl;
 		return 1;
 	}
@@ -107,7 +109,8 @@ reboot:
 		opts.WebSocketHostname = conf[2];	// 同上
 		opts.HttpPort = stoi(conf[3]);					// 同上
 		opts.WebSocketPort = stoi(conf[4]);				// 同上
-		opts.VerifyKey = conf[5];			// 同上
+		opts.VerifyKey = conf[5];
+		opts.ThreadPoolSize = 6;// 同上
 		db_information.db_name = conf[6];
 		db_information.db_addr = conf[7];
 		db_information.db_username = conf[8];
@@ -116,13 +119,13 @@ reboot:
 		welcomemessage = conf[11];
 		deepai_key = conf[12];
 		nsfw_value = atof(conf[13].c_str());
-		if (deepai_key.empty())deepai_key = "quickstart-QUdJIGlzIGNvbWluZy4uLi4K";
+		deepai_generator = conf[14];
 		wordchecker wordchecker_init(db_information);
 		wordchecker_init.init(ACer,wordcheck_list,ACer_lock,wordcheck_list_lock);
 	}
 	while (true){
 		try{
-			cout << "Trying to establish the connection..." << endl;
+			cout << "尝试连接指定的Bot…" << endl;
 			bot.Connect(opts);
 			break;
 		}
@@ -131,7 +134,7 @@ reboot:
 		}
 		MiraiBot::SleepSeconds(1);
 	}
-	cout << "Bot Working..." << endl;
+	cout << "连接成功，正在运行中…" << endl;
 	bot.On<GroupMessage>(
 		[&](GroupMessage m){
 			try{
@@ -189,9 +192,9 @@ reboot:
 			while (true)
 			{
 				try{
-					cout << "Trying to establish the connection..." << endl;
+					cout << "尝试重新连接，请稍候…" << endl;
 					bot.Reconnect();
-					cout << "Reconnected." << endl;
+					cout << "重新连接成功" << endl;
 					break;
 				}
 				catch (const std::exception& ex){
@@ -259,6 +262,15 @@ reboot:
 			}
 			permchecker db(db_information);
 			string res = db.grantperm(atoi(commands[1].c_str()), atoi(commands[2].c_str()));
+			cout << res << endl;
+		}
+		if (*commands.begin() == "删除管理员") {
+			if (commands.size() != 3) {
+				cout << "格式错误" << endl;
+				goto cont;
+			}
+			permchecker db(db_information);
+			string res = db.deperm(atoi(commands[1].c_str()), atoi(commands[2].c_str()));
 			cout << res << endl;
 		}
 	cont:;

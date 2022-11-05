@@ -1,4 +1,5 @@
-﻿#include <mirai.h>
+﻿#pragma once
+#include <mirai.h>
 #include <string>
 #include "admin.hpp"
 #include "autoac.hpp"

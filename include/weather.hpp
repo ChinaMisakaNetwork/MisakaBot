@@ -1,4 +1,5 @@
-﻿#include <mirai.h>
+﻿#pragma once
+#include <mirai.h>
 #include <cpr/cpr.h>
 #include <string>
 using namespace std;

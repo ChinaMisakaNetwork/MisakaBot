@@ -1,4 +1,4 @@
-﻿#define CPPHTTPLIB_OPENSSL_SUPPORT
+﻿#pragma once
 #include <mirai.h>
 #include <mysql++.h>
 #include <vector>

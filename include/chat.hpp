@@ -1,4 +1,5 @@
-﻿#include <mirai.h>
+﻿#pragma once
+#include <mirai.h>
 #include "admin.hpp"
 #include <mysql++.h>
 #include <vector>

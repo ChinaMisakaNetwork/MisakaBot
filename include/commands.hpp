@@ -1,4 +1,5 @@
-﻿#include "admin.hpp"
+﻿#pragma once
+#include "admin.hpp"
 #include <mirai.h>
 #include <vector>
 #include <exception>

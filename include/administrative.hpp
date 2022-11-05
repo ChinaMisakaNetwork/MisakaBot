@@ -1,3 +1,4 @@
+#pragma once
 #include <mysql++.h>
 #include <iostream>
 #include <mirai.h>
