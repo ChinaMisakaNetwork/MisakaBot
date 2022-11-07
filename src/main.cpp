@@ -6,6 +6,7 @@
 #include <cpr/cpr.h>
 #include <mutex>
 #include <string>
+#include <thread>
 #include "administrative.hpp"
 #include "deniedwords.hpp"
 #include "calc.hpp"
@@ -13,6 +14,7 @@
 #include "wordcheck.hpp"
 #include "hitokoto.hpp"
 #include "commands.hpp"
+#include "genshin.hpp"
 #include "neteasemusic.hpp"
 #include "weather.hpp"
 #include "record.hpp"
@@ -24,7 +26,8 @@ map<int, TrieAc>ACer;
 map<int, bool>wordcheck_list;
 mutex ACer_lock, wordcheck_list_lock;
 map<int, mutex>fslock;
-string handle_message(GroupMessage& m,const db_info& dbf,GroupImage& img,const string& deepai_key) {
+string GenshinlToken, GenshinltUID, GenshinCookieToken, GenshinAccountId;
+MessageChain handle_message(GroupMessage m, db_info dbf, const string& deepai_key, const double& nsfw_value) {
 	neteasemusic music;
 	chatobj chat(dbf);
 	weather wt;
@@ -32,43 +35,42 @@ string handle_message(GroupMessage& m,const db_info& dbf,GroupImage& img,const s
 	hitokoto htkt;
 	recorder rcer;
 	deepai_picture pic(deepai_key);
-	rcer.handler(m, fslock);
-	string res = "";
-	res = chat.handler(m, img);
-	if (!res.empty())return res;
-	res = htkt.handler(m,img);
-	if (!res.empty())return res;
-	res = music.handler(m);
-	if (!res.empty())return res;
-	res = wt.handler(m);
-	if (!res.empty())return res;
-	res = bz.handler(m);
-	if (!res.empty())return res;
-	res = pic.handler(m, img);
-	if (!res.empty())return res;
-	return "";
-}
-string handle_message(GroupMessage m,db_info dbf,const string& deepai_key,const double& nsfw_value) {
 	administrative admin(dbf);
 	deniedwords dw(dbf);
 	calc calculator;
 	wordchecker checker(dbf);
 	commands cmd(dbf);
-	string res = "";
-	res = admin.handler(m);
-	if (!res.empty())return res;
+	genshin gs(GenshinlToken, GenshinltUID, GenshinCookieToken, GenshinAccountId);
+	rcer.handler(m, fslock);
+	MessageChain res;
+	res = checker.handler(m, ACer, wordcheck_list, deepai_key, nsfw_value);
+	if (!res.Empty())return res;
 	res = dw.handler(m);
-	if (!res.empty()) {
+	if (!res.Empty())return res;
+	res = admin.handler(m);
+	if (!res.Empty()) {
 		checker.init(ACer, wordcheck_list, ACer_lock, wordcheck_list_lock);
 		return res;
 	}
+	res = gs.handler(m);
+	if (!res.Empty())return res;
 	res = calculator.handler(m);
-	if (!res.empty())return res;
+	if (!res.Empty())return res;
 	res = cmd.handler(m);
-	if (!res.empty())return res;
-	res = checker.handler(m, ACer, wordcheck_list, deepai_key, nsfw_value);
-	if (!res.empty())return res;
-	return "";
+	if (!res.Empty())return res;
+	res = chat.handler(m);
+	if (!res.Empty())return res;
+	res = htkt.handler(m);
+	if (!res.Empty())return res;
+	res = music.handler(m);
+	if (!res.Empty())return res;
+	res = wt.handler(m);
+	if (!res.Empty())return res;
+	res = bz.handler(m);
+	if (!res.Empty())return res;
+	res = pic.handler(m);
+	if (!res.Empty())return res;
+	return MessageChain();
 }
 int main(int argc,const char* argv[]) {
 reboot:
@@ -81,8 +83,8 @@ reboot:
 	ofstream fout;
 	double nsfw_value;
 	string deepai_key;
-	string deepai_generator;
 	db_info db_information;
+	string genshinapi;
 	string welcomemessage = "";
 	fin.open("/etc/MisakaBot/MisakaBot.conf");
 	if (!fin.good()) {
@@ -90,7 +92,10 @@ reboot:
 		fout.open("/etc/MisakaBot/MisakaBot.conf");
 		if(!fout.good())system("mkdir /etc/MisakaBot");
 		fout.open("/etc/MisakaBot/MisakaBot.conf");
-		fout << "BotQQ=12345678" << endl << "HttpHostname=localhost" << endl << "WebSocketHostname=localhost" << endl << "HttpPort=8080" << endl << "WebSocketPort=8080" << endl << "VerifyKey=VerifyKey" << endl << "MySQLdatabase=DatabaseName" << endl << "MySQLaddress=localhost" << endl << "MySQLusername=username" << endl << "MySQLpassword=password" << endl << "MySQLconnectPort=3306" << endl << "入群欢迎词=欢迎词" << endl << "DeepaiKey=Key" << endl << "nsfw_value=0.75" << endl << "APIGeneratorURL=URL";;
+		fout << "BotQQ=12345678" << endl << "HttpHostname=localhost" << endl << "WebSocketHostname=localhost" << endl << "HttpPort=8080" << endl << "WebSocketPort=8080" << endl
+			<< "VerifyKey=VerifyKey" << endl << "MySQLdatabase=DatabaseName" << endl << "MySQLaddress=localhost" << endl << "MySQLusername=username" << endl << "MySQLpassword=password" << endl
+			<< "MySQLconnectPort=3306" << endl << "入群欢迎词=欢迎词" << endl << "DeepaiKey=Key" << endl << "nsfw_value=0.75" << endl
+			<< "GenshinlToken=Token" << endl << "GenshinltUID=UID" << endl << "GenshinCookieToken=Token" << endl << "GenshinAccountId=AccountID";
 		cout << "Conf created at /etc/MisakaBot/MisakaBot.conf , please edit it and restart the Bot." << endl;
 		return 1;
 	}
@@ -119,7 +124,10 @@ reboot:
 		welcomemessage = conf[11];
 		deepai_key = conf[12];
 		nsfw_value = atof(conf[13].c_str());
-		deepai_generator = conf[14];
+		GenshinlToken = conf[14];
+		GenshinltUID = conf[15];
+		GenshinCookieToken = conf[16];
+		GenshinAccountId = conf[17];
 		wordchecker wordchecker_init(db_information);
 		wordchecker_init.init(ACer,wordcheck_list,ACer_lock,wordcheck_list_lock);
 	}
@@ -136,41 +144,18 @@ reboot:
 	}
 	cout << "连接成功，正在运行中…" << endl;
 	bot.On<GroupMessage>(
-		[&](GroupMessage m){
-			try{
-				string result = "";
-				MessageChain mc;
-				GroupImage img;
-				VoiceMessage vc;
-				result = handle_message(m, db_information, img,deepai_key);
-				if (!result.empty()) {
-					mc.At(m.Sender.QQ);
-					mc.Add<PlainMessage>(result);
-					mc.Image(img);
-					bot.SendMessage(m.Sender.Group.GID, mc);
-				}
-			}
-			catch (const std::exception& ex){
-				cout << ex.what() << endl;
-			}
-		});
-	bot.On<GroupMessage>(
 		[&](GroupMessage m) {
 			try {
-				string result = "";
-				MessageChain mc;
-				GroupImage img;
-				VoiceMessage vc;
-				result = handle_message(m, db_information,deepai_key,nsfw_value);
-				if (!result.empty()) {
-					mc.At(m.Sender.QQ);
-					mc.Add<PlainMessage>(result);
-					mc.Image(img);
+				MessageChain mc = handle_message(m, db_information, deepai_key, nsfw_value);
+				if(!mc.Empty()) {
+					mc.Insert(mc.begin(), AtMessage(m.Sender.QQ));
 					bot.SendMessage(m.Sender.Group.GID, mc);
 				}
 			}
 			catch (const std::exception& ex) {
+				if (ex.what() == "网络错误.")goto skip;
 				cout << ex.what() << endl;
+			skip:;
 			}
 		});
 	bot.On<NewFriendRequestEvent>([&](NewFriendRequestEvent e) {
@@ -261,7 +246,7 @@ reboot:
 				goto cont;
 			}
 			permchecker db(db_information);
-			string res = db.grantperm(atoi(commands[1].c_str()), atoi(commands[2].c_str()));
+			string res = db.grantperm(atoi(commands[1].c_str()), atoi(commands[2].c_str())).GetPlainText();
 			cout << res << endl;
 		}
 		if (*commands.begin() == "删除管理员") {
@@ -270,7 +255,7 @@ reboot:
 				goto cont;
 			}
 			permchecker db(db_information);
-			string res = db.deperm(atoi(commands[1].c_str()), atoi(commands[2].c_str()));
+			string res = db.deperm(atoi(commands[1].c_str()), atoi(commands[2].c_str())).GetPlainText();
 			cout << res << endl;
 		}
 	cont:;

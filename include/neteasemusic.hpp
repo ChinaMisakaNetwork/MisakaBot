@@ -7,18 +7,20 @@ using namespace Cyan;
 using namespace std;
 class neteasemusic {
 public:
-    string search(vector<string>commands) {
-        string ans = "搜索结果：";
-        ans += '\n';
+    MessageChain search(vector<string>commands) {
+        MessageChain msg;
         if (*commands.begin() == "搜歌") {
             if (commands.size() != 2) {
-                return "格式错误，请检查格式";
+				msg.Add<PlainMessage>("参数错误");
+                return msg;
             }
             try {
+                msg.Add<PlainMessage>("结果如下：\n");
                 auto res = cpr::Get(cpr::Url{ "https://v1.hitokoto.cn/nm/search/" + commands[1]});
                 json data = json::parse(res.text);
                 json reply = data["result"]["songs"];
                 for (auto i = reply.begin(); i != reply.end() && (i-reply.begin())<=10; ++i) {
+                    string ans;
                     ans += to_string(i-reply.begin() + 1);
                     ans += '.';
                     ans += "歌曲名：";
@@ -28,20 +30,24 @@ public:
                     ans += "  歌曲id：";
                     ans += to_string(i->at("id").get<int>());
                     ans += '\n';
+                    msg.Add<PlainMessage>(ans);
                 }
-                return ans;
+                return msg;
             }
             catch (const exception& ex) {
                 cout << ex.what() << endl;
-                return "出现错误，请稍后再试";
+				msg.Add<PlainMessage>("出现错误，请稍后再试");
+                return msg;
             }
         }
-        return "";
+        return MessageChain();
     }
-    string sing(GroupMessage m, vector<string>commands) {
-        if (*commands.begin() != "唱歌")return "";
+    MessageChain sing(GroupMessage m, vector<string>commands) {
+        if (*commands.begin() != "唱歌")return MessageChain();
+        MessageChain msg;
         if (commands.size() != 2) {
-            return "格式错误，请检查格式";
+            return msg.Add<PlainMessage>("格式错误，请检查格式");
+            return msg;
         }
         try {
             MiraiBot& bot = m.GetMiraiBot();
@@ -50,21 +56,21 @@ public:
             string url = "http://music.163.com/song/media/outer/url?id=" + commands[1] + ".mp3";
             vc.Url(url);
             mc.Add<VoiceMessage>(vc);
-            bot.SendMessage(m.Sender.Group.GID, mc);
+            return mc;
         }
         catch (...) {}
-        return "";
+        return MessageChain();
     }
-	string handler(GroupMessage m) {
+	MessageChain handler(GroupMessage m) {
         stringstream sin((m.MessageChain.GetPlainText()));
         vector<string>commands;
         string temp;
         while (getline(sin, temp, ' ')) {
             commands.push_back(temp);
         }
-        if (commands.size() == 0)return "";
-        string search1 = search(commands);
-        if (!search1.empty())return search1;
+        if (commands.size() == 0)return MessageChain();
+        MessageChain search1 = search(commands);
+        if (!search1.Empty())return search1;
         return sing(m, commands);
 	}
 };

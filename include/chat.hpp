@@ -16,8 +16,9 @@ public:
 	chatobj(db_info dbf):permchecker(dbf) {
 		dbinfo = dbf;
 	}
-	string handler(GroupMessage m,GroupImage& img) {
-		if (!m.AtMe())return "";
+	MessageChain handler(GroupMessage m) {
+		MessageChain msg;
+		if (!m.AtMe())return msg;
 		try {
 			string s = m.MessageChain.GetPlainText();
 			s.erase(s.begin());
@@ -29,19 +30,23 @@ public:
 				string ans = "";
 				if (sres[0]["have_img"].to_string(ans),ans=="1") {
 					sres[0]["img_url"].to_string(ans);
-					img=m.GetMiraiBot().UploadGroupImage(ans,true);
+					msg.Image(m.GetMiraiBot().UploadGroupImage(ans,true));
 				}
 				sres[0]["answer"].to_string(ans);
-				return ans;
+				msg.Add<PlainMessage>(ans);
+				return msg;
 			}
 			s = "https://api.qingyunke.com/api.php?key=free&appid=0&msg=" + s;
 			auto res = cpr::Get(cpr::Url{s});
 			json reply = json::parse(res.text);
-			return reply["content"].get<string>();
+			msg.Add<PlainMessage>(reply["content"].get<string>());
+			return msg;
 		}
 		catch (const std::exception& ex) {
 			cout << ex.what() << endl;
-			return "出现错误，请稍后再试";
+			msg.Add<PlainMessage>("出现错误，请稍后再试");
+			return msg;
 		}
+		return msg;
 	}
 };

@@ -12,21 +12,19 @@ public:
 	deepai_picture(string key) {
 		api_key = key;
 	}
-	string handler(GroupMessage m,GroupImage& img) {
-		if (api_key.empty())return "未设置apikey，暂时无法使用该功能哦~";
+	MessageChain handler(GroupMessage m) {
+		MessageChain msg;
+		if (api_key.empty()) {
+			msg.Add<PlainMessage>("未设置apikey，暂时无法使用该功能哦~");
+			return msg;
+		}
 		stringstream sin((m.MessageChain.GetPlainText()));
 		vector<string>commands;
 		string temp;
-		while (getline(sin, temp, ' ')) {
-			for (int i = 0; i < temp.size(); ++i) {
-				if (temp[i] == '\n') {
-					temp.erase(temp.begin()+i);
-					--i;
-				}
-			}
+		while (getline(sin, temp, '#')) {
 			commands.push_back(temp);
 		}
-		if (commands.size() == 0)return "";
+		if (commands.size() == 0)return MessageChain();
 		vector<ImageMessage>mc = m.MessageChain.GetAll<ImageMessage>();
 		{
 			MessageChain mcs;
@@ -34,71 +32,88 @@ public:
 			mcs.Add<PlainMessage>("正在处理中，请稍候…");
 			if (*commands.begin() == "图片上色") {
 				try {
-					m.GetMiraiBot().SendMessage(m.Sender.Group.GID, mcs);
-					auto res = cpr::Post(cpr::Url{ "https://api.deepai.org/api/colorizer" }, 
-						cpr::Payload{ {"image",mc[0].Url()},
-						},
-						cpr::Header{ {"Api-Key",api_key} });
-					
-					json reply = json::parse(res.text);
-					img.Url = reply["output_url"].get<string>();
-					return "结果如下：";
+					msg.Add<PlainMessage>("结果如下：");
+					for (ImageMessage& i : mc) {
+						GroupImage img;
+						m.GetMiraiBot().SendMessage(m.Sender.Group.GID, mcs);
+						auto res = cpr::Post(cpr::Url{ "https://api.deepai.org/api/colorizer" },
+							cpr::Payload{ {"image",i.Url()},
+							},
+							cpr::Header{ {"Api-Key",api_key} });
+						json reply = json::parse(res.text);
+						img.Url = reply["output_url"].get<string>();
+						msg.Image(img);
+					}
+					return msg;
 				}
 				catch (...) {
 				}
 			}
 			//Super Resolution
 			if (*commands.begin() == "图片超分") {
-			if (mc.size() == 0)return "格式错误";
 			try {
-				m.GetMiraiBot().SendMessage(m.Sender.Group.GID, mcs);
-				auto res = cpr::Post(cpr::Url{ "https://api.deepai.org/api/torch-srgan" },
-					cpr::Payload{ {"image",mc[0].Url()},
-					},
-					cpr::Header{ {"Api-Key",api_key} });
-				json reply = json::parse(res.text);
-				img.Url = reply["output_url"].get<string>();
-				return "结果如下：";
+				msg.Add<PlainMessage>("结果如下：");
+				for (ImageMessage& i : mc) {
+					GroupImage img;
+					m.GetMiraiBot().SendMessage(m.Sender.Group.GID, mcs);
+					auto res = cpr::Post(cpr::Url{ "https://api.deepai.org/api/super-resolution" },
+						cpr::Payload{ {"image",i.Url()},
+						},
+						cpr::Header{ {"Api-Key",api_key} });
+					json reply = json::parse(res.text);
+					img.Url = reply["output_url"].get<string>();
+					msg.Image(img);
+				}
+				return msg;
 			}
 			catch (...) {
 			}
 			}
 			if (*commands.begin() == "图片降噪") {
-				if (mc.size() == 0)return "格式错误";
 				try {
-					m.GetMiraiBot().SendMessage(m.Sender.Group.GID, mcs);
-					auto res = cpr::Post(cpr::Url{ "https://api.deepai.org/api/waifu2x" },
-						cpr::Payload{ {"image",mc[0].Url()},
-						},
-						cpr::Header{ {"Api-Key",api_key} });
-					json reply = json::parse(res.text);
-					img.Url = reply["output_url"].get<string>();
-					return "结果如下：";
+					msg.Add<PlainMessage>("结果如下：");
+					for (ImageMessage& i : mc) {
+						GroupImage img;
+						m.GetMiraiBot().SendMessage(m.Sender.Group.GID, mcs);
+						auto res = cpr::Post(cpr::Url{ "https://api.deepai.org/api/denoise" },
+							cpr::Payload{ {"image",i.Url()},
+							},
+							cpr::Header{ {"Api-Key",api_key} });
+						json reply = json::parse(res.text);
+						img.Url = reply["output_url"].get<string>();
+						msg.Image(img);
+					}
+					return msg;
 				}
 				catch (...) {
 				}
 			}
 			//Text To Image
 			if (*commands.begin() == "AI画图") {
-				if (commands.size() != 2)return "请检查格式";
+				if (commands.size() != 2) {
+					msg.Add<PlainMessage>("参数错误");
+					return msg;
+				}
 				try {
+					GroupImage img;
+					msg.Add<PlainMessage>("结果如下：");
 					m.GetMiraiBot().SendMessage(m.Sender.Group.GID, mcs);
-					auto res = cpr::Post(cpr::Url{ "https://api.deepai.org/api/text2img" },
+					auto res = cpr::Post(cpr::Url{ "https://api.deepai.org/api/stable-diffusion" },
 						cpr::Payload{
 							{"text",commands[1]},
 						},
 						cpr::Header{ {"Api-Key",api_key} }
 					);
 					json reply = json::parse(res.text);
-					cout << res.text << endl;
 					img.Url = reply["output_url"].get<string>();
-					return "结果如下：";
+					msg.Image(img);
+					return msg;
 				}
 				catch (...) {
 				}
 			}
 		}
-		return "";
+		return MessageChain();
 	}
 	
 };

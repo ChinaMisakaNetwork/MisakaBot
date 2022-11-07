@@ -12,7 +12,8 @@ class hitokoto {
 private:
 protected:
 public:
-	string handler(GroupMessage m,GroupImage& img) {
+	MessageChain handler(GroupMessage m) {
+		MessageChain msg;
 		if (m.MessageChain.GetPlainText() == "一言") {
 			try {
 				auto res = cpr::Get(cpr::Url{ "https://v1.hitokoto.cn/" });
@@ -30,14 +31,18 @@ public:
 				ans += id;
 				res = cpr::Get(cpr::Url{ "https://tenapi.cn/acg/?return=json" });
 				reply = json::parse(res.text);
+				GroupImage img;
 				img.Url = reply["imgurl"].get<string>();
-				return ans;
+				msg.Image(img);
+				msg.Add<PlainMessage>(ans);
+				return msg;
 			}
 			catch (const exception& ex) {
 				cout << ex.what() << endl;
-				return "出现错误，请稍后再试";
+				msg.Add<PlainMessage>("出现错误，请稍后再试");
+				return msg;
 			}
 		}
-		return "";
+		return msg;
 	}
 };

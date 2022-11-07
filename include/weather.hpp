@@ -9,22 +9,30 @@ class weather {
 private:
 protected:
 public:
-	string handler(GroupMessage m) {
+	MessageChain handler(GroupMessage m) {
+		MessageChain msg;
 		stringstream sin(m.MessageChain.GetPlainText());
 		vector<string>cmds;
 		string temp;
 		while (getline(sin, temp, ' ')) {
 			cmds.push_back(temp);
 		}
-		if (cmds.size() == 0)return "";
+		if (cmds.size() == 0)return MessageChain();
 		if (*cmds.begin() == "查询天气") {
-			if (cmds.size() != 2)return "格式错误，请检查格式";
-			string ans = cmds[1] + "未来三天天气：" + '\n';
+			if (cmds.size() != 2) {
+				msg.Add<PlainMessage>("参数错误");
+				return msg;
+			}
+			msg.Add<PlainMessage>(cmds[1] + "未来三天天气：" + '\n');
 			auto res = cpr::Get(cpr::Url{ "http://autodev.openspeech.cn/csp/api/v2.1/weather?openId=aiuicus&clientType=android&sign=android&city=" + cmds[1] + "&needMoreData=true&pageNo=1&pageSize=7" });
 			json data = json::parse(res.text);
 			json reply = data["data"]["list"];
-			if (reply.empty())return "未查询到结果";
+			if (reply.empty()) {
+				msg.Add<PlainMessage>("未查询到结果");
+				return msg;
+			}
 			for (auto i = reply.begin(); i != reply.end() && (i - reply.begin()) <= 3; ++i) {
+				string ans = "";
 				ans += "日期：";
 				ans += i->at("date").get<string>();
 				ans += "，天气：";
@@ -50,9 +58,10 @@ public:
 					ans += to_string(i->at("pm25").get<int>());
 				}
 				ans += '\n';
+				msg.Add<PlainMessage>(ans);
 			}
-			return ans;
+			return msg;
 		}
-		return "";
+		return MessageChain();
 	}
 };

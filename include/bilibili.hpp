@@ -8,14 +8,15 @@ class bilibili {
 private:
 protected:
 public:
-	string handler(GroupMessage m) {
+	MessageChain handler(GroupMessage m) {
 		stringstream sin(m.MessageChain.GetPlainText());
+		MessageChain msg;
 		vector<string>cmds;
 		string temp;
 		while (getline(sin, temp, ' ')) {
 			cmds.push_back(temp);
 		}
-		if (cmds.size() == 0)return "";
+		if (cmds.size() == 0)return msg;
 		if(*cmds.begin()=="bilibili搜索"|| *cmds.begin()=="哔哩哔哩搜索" || *cmds.begin()=="B站搜索") {
 			if(cmds.size()==2) {
 				if(cmds[1]=="热门视频") {
@@ -33,7 +34,8 @@ public:
 					ans += reply["desc"].get<string>();
 					ans += "视频链接：";
 					ans += reply["short_link_v2"].get<string>();
-					return ans;
+					msg.Add<PlainMessage>(ans);
+					return msg;
 				}
 				if(cmds[1][0]=='B' && cmds[1][1]=='V') {
 					auto res = cpr::Get(cpr::Url{ "https://api.bilibili.com/x/web-interface/view?bvid=" + cmds[1] });
@@ -47,9 +49,11 @@ public:
 					ans += '\n';
 					ans += "简介：";
 					ans += reply["desc"].get<string>();
-					return ans;
+					msg.Add<PlainMessage>(ans);
+					return msg;
 				}
-				return "格式错误，请检查输入";
+				msg.Add<PlainMessage>("请检查输入是否正确");
+				return msg;
 			}
 			if(cmds.size()==3) {
 				if(cmds[1]=="搜用户") {
@@ -70,11 +74,13 @@ public:
 					ans += '\n';
 					ans += "生日：";
 					ans += reply["birthday"].get<string>();
-					return ans;
+					msg.Add<PlainMessage>(ans);
+					return msg;
 				}
 			}
-			return "格式错误，请检查输入";
+			msg.Add<PlainMessage>("请检查输入是否正确");
+			return msg;
 		}
-		return "";
+		return msg;
 	}
 };

@@ -43,29 +43,29 @@ public:
 		ACer_lock.unlock();
 		wordcheck_list_lock.unlock();
 	}
-	string handler(GroupMessage m, map<int, TrieAc>& ACer, map<int, bool>& enabled,string deepai_key,const double& nsfw_value) {
+	MessageChain handler(GroupMessage m, map<int, TrieAc>& ACer, map<int, bool>& enabled,string deepai_key,const double& nsfw_value) {
 		MiraiBot& bot = m.GetMiraiBot();
-		if (m.MessageChain.GetPlainText().empty())return "";
+		MessageChain msg;
 		string temp = m.MessageChain.GetPlainText();
 		set<int>pair_res;
-		if (!enabled[m.Sender.Group.GID.ToInt64()])return "";
+		if (m.MessageChain.GetPlainText().empty())goto chkpicture;;
+		if (!enabled[m.Sender.Group.GID.ToInt64()])return MessageChain();
 		ACer[m.Sender.Group.GID.ToInt64()].match(temp,pair_res);
 		if (!pair_res.empty()) {
 			try {
 				bot.Recall(m.MessageId(), m.Sender.Group.GID);
 				bot.Mute(m.Sender.Group.GID, m.Sender.QQ, 60);
-				return "请注意言辞";
+				msg.Add<PlainMessage>("请注意言辞");
 			}
-			catch (const std::exception& ex) {
-				cout << ex.what() << endl;
-				return "出现错误，请稍后再试";
+			catch (...) {
 			}
 		}
 		//Image nsfw check
+		chkpicture:
 		try {
-			if (deepai_key.empty())return "";
+			if (deepai_key.empty())return msg;
 			vector<ImageMessage>mc = m.MessageChain.GetAll<ImageMessage>();
-			for (ImageMessage i : mc) {
+			for (ImageMessage& i : mc) {
 				auto res = cpr::Post(cpr::Url{ "https://api.deepai.org/api/nsfw-detector" },
 					cpr::Payload{ {"image",i.Url()},
 					},
@@ -75,10 +75,11 @@ public:
 				if (score >= nsfw_value) {
 					bot.Recall(m.MessageId(), m.Sender.Group.GID);
 					bot.Mute(m.Sender.Group.GID, m.Sender.QQ, 60);
-					return "您这图片在这发不太合适吧……";
+					msg.Add<PlainMessage>('\n' + "您这图片在这发不太合适吧…");
+					return msg;
 				}
 			}
 		}catch(...){}
-		return "";
+		return MessageChain();
 	}
 };
