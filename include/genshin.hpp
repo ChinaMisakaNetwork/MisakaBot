@@ -1,6 +1,10 @@
 ﻿#include <mirai.h>
 #include <cpr/cpr.h>
+#include "md5.hpp"
 #include <string>
+#include <ctime>
+#include <vector>
+#include <random>
 using namespace std;
 using namespace Cyan;
 //https://www.apifox.cn/apidoc/shared-e63772a9-debc-4e57-b30d-568bead9c81c/api-45194608
@@ -17,6 +21,29 @@ private:
 		if (base == "Hydro")return "水";
 		if (base == "Dendro")return "草";
 		return "未知";
+	}
+	string getserver(const string& uid) {
+		if (uid[0] == '1' || uid[0] == '2')return "cn_gf01";
+		return "cn_qd01";
+	}
+	int getrand(int L,int R) {
+		mt19937 rnd(time(nullptr));
+		int res = (int)((1.0 * rnd() / UINT_MAX) * (R - L + 1)) + L;
+		return res;
+	}
+	cpr::Header getheader(string cookie,string body,string query) {
+		cpr::Header heads{ {"x-rpc-app_version","2.37.1"},{"x-requested_with","com.mihoyo.hyperion"}, {"x-rpc-client_type","5"},{"Cookie",cookie},{"ds",get_ds(body,query)},{"origin","https://webstatic.mihoyo.com"},{"Referer","https://webstatic.mihoyo.com"},{"user-agent","Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) miHoYoBBS/2.13.1)"}};
+		return heads;
+	}
+	const string salt = "xV8v4Qu54lUKrEYFZkJhB8cuOh9Asafs";
+	string get_ds(string body,string query) {
+		//wondering if need erase prob no
+		if(!query.empty())query.erase(query.begin());
+		string ts = to_string(time(nullptr));
+		int rnd = getrand(100000, 999999);
+
+		string get_ds = "salt=" + salt + "&t=" + ts + "&r=" + to_string(rnd) + "&b=" + body + "&q=" + query;
+		return ts + ',' + to_string(rnd) + ',' + md5(get_ds);
 	}
 protected:
 public:
@@ -38,11 +65,8 @@ public:
 		if(*commands.begin()=="原神") {
 			try {
 				if (commands[1] == "查首页") {
-					auto res = cpr::Get(cpr::Url{ "http://127.0.0.1:8000/genshin/index/" + commands[2] }, cpr::Cookies{ {"ltoken",ltk},{"ltuid",ltuid},{"cookie_token",ckt},{"account_id",accid} });
-					if(json::parse(res.text)["code"].get<int>()==422) {
-						msg.Add<PlainMessage>("似乎天空岛暂时关闭了大门，请稍后再试吧~  ——派蒙");
-						return msg;
-					}
+					string querycmd = "?role_id=" + commands[2] + "&server=" + getserver(commands[2]);
+					auto res = cpr::Get(cpr::Url{ "https://api-takumi-record.mihoyo.com/game_record/app/genshin/api/index"+querycmd},getheader("ltoken="+ltk+";ltuid="+ltuid+";cookie_token="+ckt+";account_id="+accid, "", querycmd));
 					json data = json::parse(res.text)["data"];
 					json reply = data["avatars"];
 					msg.Add<PlainMessage>("结果如下：\n昵称为" + data["role"]["nickname"].get<string>() + "的旅行者现有角色" + to_string(data["stats"]["avatar_number"].get<int>())+"个，分别为：\n");
@@ -58,11 +82,7 @@ public:
 					return msg;
 				}
 				if(commands[1]=="查角色") {
-					auto res = cpr::Get(cpr::Url{ "http://127.0.0.1:8000/genshin/character/" + commands[2] }, cpr::Cookies{{"ltoken",ltk},{"ltuid",ltuid},{"cookie_token",ckt},{"account_id",accid}});
-					if (json::parse(res.text)["code"].get<int>() == 422) {
-						msg.Add<PlainMessage>("似乎天空岛暂时关闭了大门，请稍后再试吧~  ——派蒙");
-						return msg;
-					}
+					auto res = cpr::Post(cpr::Url{ "https://api-takumi-record.mihoyo.com/game_record/app/genshin/api/character"},cpr::Payload{{"role_id",commands[2]},{"server",getserver(commands[2])}},getheader("ltoken=" + ltk + ";ltuid=" + ltuid + ";cookie_token=" + ckt + ";account_id=" + accid,"{role_id="+commands[2]+","+"server="+getserver(commands[2]),""));
 					json data = json::parse(res.text)["data"];
 					json reply = data["avatars"];
 					msg.Add<PlainMessage>("结果如下：\n昵称为" + data["role"]["nickname"].get<string>() + "的旅行者现有角色" + to_string(data["stats"]["avatar_number"].get<int>()) + "个，分别为：\n");
