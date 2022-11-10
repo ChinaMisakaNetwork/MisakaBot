@@ -10,25 +10,26 @@ using namespace std;
 using namespace Cyan;
 class calc {
 public:
-	string handler(GroupMessage m) {
+	MessageChain handler(GroupMessage m) {
         vector<string>commands;
+        MessageChain msg;
         stringstream sin(m.MessageChain.GetPlainText());
         string temp;
         while (getline(sin, temp, ' ')) {
             commands.push_back(temp);
         }
-        if (commands.size() == 0)return "";
-        if (commands.size() != 2)return "";
+        if (commands.size() == 0)return msg;
+        if (commands.size() != 2)return msg;
         if (*commands.begin() == "计算") {
             string ans = "答案是：";
             expression_t exp;
             parser_t par;
             if (!par.compile(commands[1], exp)) {
-                return "格式错误";
+				msg.Add<PlainMessage>("表达式错误");
             }
             ans += to_string(exp.value());
-            return ans;
+            msg.Add<PlainMessage>(ans);
         }
-        return "";
+        return msg;
 	}
 };

@@ -1,9 +1,11 @@
 #pragma once
 #include <mysql++.h>
 #include <ssqls.h>
+#include <mirai.h>
 #include <fstream>
 #include <string>
 using namespace std;
+using namespace Cyan;
 struct db_info {
 	string db_addr, db_username, db_password;
 	string db_name;
@@ -34,26 +36,32 @@ public:
 		mysqlpp::StoreQueryResult res=query.store();
 		return !res.empty();
 	}
-	string grantperm(const int& groupid, const int& qq) {
+	MessageChain grantperm(const int& groupid, const int& qq) {
 		query.reset();
 		query << "insert into qqadmin(groupid,adminqq) values (%0q,%1q)";
 		query.parse();
 		mysqlpp::SimpleResult res=query.execute(groupid,qq);
+		MessageChain result;
 		if (string(res.info()).empty()) {
-			return "已添加";
+			result.Add<PlainMessage>("已添加");
+			return result;
 		}
 		cout << string(res.info()) << endl;
-		return "出现错误，请查看终端以获取详细信息";
+		result.Add<PlainMessage>("出现错误，请查看终端以获取详细信息");
+		return result;
 	}
-	string deperm(const int& groupid, const int& qq) {
+	MessageChain deperm(const int& groupid, const int& qq) {
 		query.reset();
 		query << "delete from qqadmin where groupid = %0q and adminqq = %1q";
 		query.parse();
 		mysqlpp::SimpleResult res = query.execute(groupid, qq);
+		MessageChain msg;
 		if (string(res.info()).empty()) {
-			return "已删除";
+			msg.Add<PlainMessage>("已删除");
+			return msg;
 		}
 		cout << string(res.info()) << endl;
-		return "出现错误，请查看终端以获取详细信息";
+		msg.Add<PlainMessage>("出现错误，请查看终端以获取详细信息");
+		return msg;
 	}
 };
