@@ -41,11 +41,9 @@ private:
 		if(!query.empty())query.erase(query.begin());
 		string ts = to_string(time(nullptr));
 		int rnd = getrand(100000, 999999);
-
 		string get_ds = "salt=" + salt + "&t=" + ts + "&r=" + to_string(rnd) + "&b=" + body + "&q=" + query;
 		return ts + ',' + to_string(rnd) + ',' + md5(get_ds);
 	}
-protected:
 public:
 	genshin(const string&ltk,const string&ltuid,const string&ckt,const string&accid) {
 		this->ltk = ltk;
