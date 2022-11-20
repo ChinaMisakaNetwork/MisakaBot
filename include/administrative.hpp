@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include <mysql++.h>
 #include <iostream>
 #include <mirai.h>
@@ -20,9 +20,9 @@ public:
 			commands.push_back(temp);
 		}
 		if (commands.size() == 0)return msg;
-		if (*commands.begin() == "½ûÑÔ") {
+		if (*commands.begin() == "ç¦è¨€") {
 			if (!checkperm(m.Sender.Group.GID.ToInt64(), m.Sender.QQ.ToInt64())) {
-				msg.Add<PlainMessage>("Äú²»ÊÇ±¾ÈºµÄ¹ÜÀíÔ±");
+				msg.Add<PlainMessage>("æ‚¨ä¸æ˜¯æœ¬ç¾¤çš„ç®¡ç†å‘˜");
 				return msg;
 			}
 			if (commands.size() != 3)return msg;
@@ -31,13 +31,13 @@ public:
 			}
 			catch (const std::exception& ex) {
 				cout << ex.what() << endl;
-				msg.Add<PlainMessage>("³öÏÖ´íÎó£¬Çë²é¿´ÖÕ¶ËÒÔ»ñÈ¡ÏêÏ¸ĞÅÏ¢");
+				msg.Add<PlainMessage>("å‡ºç°é”™è¯¯ï¼Œè¯·æŸ¥çœ‹ç»ˆç«¯ä»¥è·å–è¯¦ç»†ä¿¡æ¯");
 				return msg;
 			}
 		}
-		if (*commands.begin() == "Ìß³ö") {
+		if (*commands.begin() == "è¸¢å‡º") {
 			if (!checkperm(m.Sender.Group.GID.ToInt64(), m.Sender.QQ.ToInt64())) {
-				msg.Add<PlainMessage>("Äú²»ÊÇ±¾ÈºµÄ¹ÜÀíÔ±");
+				msg.Add<PlainMessage>("æ‚¨ä¸æ˜¯æœ¬ç¾¤çš„ç®¡ç†å‘˜");
 				return msg;
 			}
 			if (commands.size() != 2)return msg;
@@ -46,13 +46,13 @@ public:
 			}
 			catch (const exception& ex) {
 				cout << ex.what() << endl;
-				msg.Add<PlainMessage>("³öÏÖ´íÎó£¬Çë²é¿´ÖÕ¶ËÒÔ»ñÈ¡ÏêÏ¸ĞÅÏ¢");
+				msg.Add<PlainMessage>("å‡ºç°é”™è¯¯ï¼Œè¯·æŸ¥çœ‹ç»ˆç«¯ä»¥è·å–è¯¦ç»†ä¿¡æ¯");
 				return msg;
 			}
 		}
-		if (*commands.begin() == "È¡Ïû½ûÑÔ") {
+		if (*commands.begin() == "å–æ¶ˆç¦è¨€") {
 			if (!checkperm(m.Sender.Group.GID.ToInt64(), m.Sender.QQ.ToInt64())) {
-				msg.Add<PlainMessage>("Äú²»ÊÇ±¾ÈºµÄ¹ÜÀíÔ±");
+				msg.Add<PlainMessage>("æ‚¨ä¸æ˜¯æœ¬ç¾¤çš„ç®¡ç†å‘˜");
 				return msg;
 			}
 			if (commands.size() != 2)return msg;
@@ -61,35 +61,35 @@ public:
 			}
 			catch (const exception& ex) {
 				cout << ex.what() << endl;
-				msg.Add<PlainMessage>("³öÏÖ´íÎó£¬Çë²é¿´ÖÕ¶ËÒÔ»ñÈ¡ÏêÏ¸ĞÅÏ¢");
+				msg.Add<PlainMessage>("å‡ºç°é”™è¯¯ï¼Œè¯·æŸ¥çœ‹ç»ˆç«¯ä»¥è·å–è¯¦ç»†ä¿¡æ¯");
 				return msg;
 			}
 		}
-		if (*commands.begin() == "Ìí¼Ó¹ÜÀíÔ±") {
+		if (*commands.begin() == "æ·»åŠ ç®¡ç†å‘˜") {
 			if (!checkperm(m.Sender.Group.GID.ToInt64(), m.Sender.QQ.ToInt64())) {
-				msg.Add<PlainMessage>("Äú²»ÊÇ±¾ÈºµÄ¹ÜÀíÔ±");
+				msg.Add<PlainMessage>("æ‚¨ä¸æ˜¯æœ¬ç¾¤çš„ç®¡ç†å‘˜");
 				return msg;
 			}
 			if (commands.size() != 2)return msg;
 			return grantperm(m.Sender.Group.GID.ToInt64(), m.Sender.QQ.ToInt64());
 		}
-		if (*commands.begin() == "¸ü¸ÄÈºÃûÆ¬") {
+		if (*commands.begin() == "æ›´æ”¹ç¾¤åç‰‡") {
 			if (!checkperm(m.Sender.Group.GID.ToInt64(), m.Sender.QQ.ToInt64())) {
-				msg.Add<PlainMessage>("Äú²»ÊÇ±¾ÈºµÄ¹ÜÀíÔ±");
+				msg.Add<PlainMessage>("æ‚¨ä¸æ˜¯æœ¬ç¾¤çš„ç®¡ç†å‘˜");
 				return msg;
 			}
 			if (commands.size() != 3)return msg;
 			try {
 				bot.SetGroupMemberName(m.Sender.Group.GID, QQ_t(atoi(commands[1].c_str())), commands[2]);
-				msg.Add<PlainMessage>("¸ü¸Ä³É¹¦");
+				msg.Add<PlainMessage>("æ›´æ”¹æˆåŠŸ");
 				return msg;
 			}catch(...) {
 				
 			}
 		}
-		if (*commands.begin() == "È«Ìå½ûÑÔ") {
+		if (*commands.begin() == "å…¨ä½“ç¦è¨€") {
 			if (!checkperm(m.Sender.Group.GID.ToInt64(), m.Sender.QQ.ToInt64())) {
-				msg.Add<PlainMessage>("Äú²»ÊÇ±¾ÈºµÄ¹ÜÀíÔ±");
+				msg.Add<PlainMessage>("æ‚¨ä¸æ˜¯æœ¬ç¾¤çš„ç®¡ç†å‘˜");
 				return msg;
 			}
 			try {
@@ -97,13 +97,13 @@ public:
 			}
 			catch (const std::exception& ex) {
 				cout << ex.what() << endl;
-				msg.Add<PlainMessage>("³öÏÖ´íÎó£¬Çë²é¿´ÖÕ¶ËÒÔ»ñÈ¡ÏêÏ¸ĞÅÏ¢");
+				msg.Add<PlainMessage>("å‡ºç°é”™è¯¯ï¼Œè¯·æŸ¥çœ‹ç»ˆç«¯ä»¥è·å–è¯¦ç»†ä¿¡æ¯");
 				return msg;
 			}
 		}
-		if (*commands.begin() == "È«Ìå½â½û") {
+		if (*commands.begin() == "å…¨ä½“è§£ç¦") {
 			if (!checkperm(m.Sender.Group.GID.ToInt64(), m.Sender.QQ.ToInt64())) {
-				msg.Add<PlainMessage>("Äú²»ÊÇ±¾ÈºµÄ¹ÜÀíÔ±");
+				msg.Add<PlainMessage>("æ‚¨ä¸æ˜¯æœ¬ç¾¤çš„ç®¡ç†å‘˜");
 				return msg;
 			}
 			try {
@@ -111,7 +111,7 @@ public:
 			}
 			catch (const std::exception& ex) {
 				cout << ex.what() << endl;
-				msg.Add<PlainMessage>("³öÏÖ´íÎó£¬Çë²é¿´ÖÕ¶ËÒÔ»ñÈ¡ÏêÏ¸ĞÅÏ¢");
+				msg.Add<PlainMessage>("å‡ºç°é”™è¯¯ï¼Œè¯·æŸ¥çœ‹ç»ˆç«¯ä»¥è·å–è¯¦ç»†ä¿¡æ¯");
 				return msg;
 			}
 		}

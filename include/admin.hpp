@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include <mysql++.h>
 #include <ssqls.h>
 #include <mirai.h>
@@ -43,11 +43,11 @@ public:
 		mysqlpp::SimpleResult res=query.execute(groupid,qq);
 		MessageChain result;
 		if (string(res.info()).empty()) {
-			result.Add<PlainMessage>("ÒÑÌí¼Ó");
+			result.Add<PlainMessage>("å·²æ·»åŠ ");
 			return result;
 		}
 		cout << string(res.info()) << endl;
-		result.Add<PlainMessage>("³öÏÖ´íÎó£¬Çë²é¿´ÖÕ¶ËÒÔ»ñÈ¡ÏêÏ¸ĞÅÏ¢");
+		result.Add<PlainMessage>("å‡ºç°é”™è¯¯ï¼Œè¯·æŸ¥çœ‹ç»ˆç«¯ä»¥è·å–è¯¦ç»†ä¿¡æ¯");
 		return result;
 	}
 	MessageChain deperm(const int& groupid, const int& qq) {
@@ -57,11 +57,11 @@ public:
 		mysqlpp::SimpleResult res = query.execute(groupid, qq);
 		MessageChain msg;
 		if (string(res.info()).empty()) {
-			msg.Add<PlainMessage>("ÒÑÉ¾³ı");
+			msg.Add<PlainMessage>("å·²åˆ é™¤");
 			return msg;
 		}
 		cout << string(res.info()) << endl;
-		msg.Add<PlainMessage>("³öÏÖ´íÎó£¬Çë²é¿´ÖÕ¶ËÒÔ»ñÈ¡ÏêÏ¸ĞÅÏ¢");
+		msg.Add<PlainMessage>("å‡ºç°é”™è¯¯ï¼Œè¯·æŸ¥çœ‹ç»ˆç«¯ä»¥è·å–è¯¦ç»†ä¿¡æ¯");
 		return msg;
 	}
 };

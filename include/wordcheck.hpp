@@ -74,8 +74,7 @@ public:
 				double score = reply["output"]["nsfw_score"].get<double>();
 				if (score >= nsfw_value) {
 					bot.Recall(m.MessageId(), m.Sender.Group.GID);
-					bot.Mute(m.Sender.Group.GID, m.Sender.QQ, 60);
-					msg.Add<PlainMessage>('\n' + "您这图片在这发不太合适吧…");
+					msg.Plain('\n' + "您这图片在这发不太合适吧…");
 					return msg;
 				}
 			}
