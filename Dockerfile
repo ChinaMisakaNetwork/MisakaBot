@@ -1,6 +1,6 @@
 FROM ubuntu:latest
-MKDIR /usr/src/MisakaBot
-MKDIR /MisakaBot
+RUN mkdir /usr/src/MisakaBot
+RUN mkdir /MisakaBot
 COPY . /usr/src/MisakaBot
 VOLUME ["/etc/MisakaBot","/MisakaBot/chatrecord"]
 WORKDIR /usr/src/MisakaBot
