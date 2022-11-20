@@ -7,6 +7,8 @@ name: Docker
 
 on:
   release:
+    branches:
+      - master
 
 env:
   # Use docker.io for Docker Hub if empty
