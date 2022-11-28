@@ -16,7 +16,8 @@ cd mysql++-3.3.0
 sudo ./configure --prefix=/usr --enable-thread-check LDFLAGS='-pthread'
 sudo make
 sudo make install
-cd ../
+cd ../../
+git submodule update --init --force --remote
 mkdir build
 cd build
 sudo make clean
