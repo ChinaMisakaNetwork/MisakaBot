@@ -17,6 +17,7 @@ sudo ./configure --prefix=/usr --enable-thread-check LDFLAGS='-pthread'
 sudo make
 sudo make install
 cd ../
+git submodule update --init --force --remote
 mkdir build
 cd build
 sudo make clean
