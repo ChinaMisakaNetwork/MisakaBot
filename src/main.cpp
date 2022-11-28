@@ -160,7 +160,7 @@ reboot:
 			try {
 				MessageChain mc = handle_message(m, db_information, deepai_key, nsfw_value, hypapi);
 				if(!mc.Empty()) {
-					mc.Insert(mc.begin(), AtMessage(m.Sender.QQ));
+					mc = MessageChain().At(m.Sender.QQ).Plain("\n") + mc;
 					bot.SendMessage(m.Sender.Group.GID, mc);
 				}
 			}
