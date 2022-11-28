@@ -10,9 +10,9 @@ using namespace Cyan;
 class maimai {
 private:
 	json data;
-	vector<pair<json,double>>rating_filter(const double& rmin, const double& rmax = INT_MAX, const string& type = "all") {
+	vector<pair<json,double>>rating_filter(const double& rmin, const double& rmax = INT_MAX, string type = "all") {
 		vector<pair<json,double>>res;
-		for (auto i : type) {
+		for (auto& i : type) {
 			if (i >= 'a' && i <= 'z') {
 				int tmp = i - 'a';
 				i = 'A' + tmp;
