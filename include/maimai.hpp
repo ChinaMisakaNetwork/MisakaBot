@@ -114,7 +114,6 @@ public:
 						catch (const invalid_argument& ex) {
 							return MessageChain().Plain("这真的是\"定数\"嘛？");
 						}
-
 					}
 					else {
 						try {
@@ -163,6 +162,53 @@ public:
 					if (res["basic_info"]["is_new"].get<bool>())reply.Plain("是新歌哦~");
 					return reply;
 				}
+				if (commands[1] == "随机歌曲") {
+					if (commands.size() == 3) {
+						try {
+							double rating = stod(commands[2]);
+							json res = random_song(rating);
+							MessageChain reply;
+							reply.Plain("歌名：" + res["title"].get<string>() + '\n');
+							reply.Plain("谱面类型：" + res["type"].get<string>() + '\n');
+							reply.Plain("作者：" + res["basic_info"]["artist"].get<string>() + '\n');
+							reply.Plain("bpm：" + to_string(res["basic_info"]["bpm"].get<int>()) + '\n');
+							reply.Plain("定数：");
+							for (int i = 0; i < res["ds"].size(); ++i) {
+								reply.Plain(to_string(res["ds"][i].get<double>()));
+								if (i != res["ds"].size() - 1)reply.Plain("，");
+							}
+							reply.Plain('\n');
+							if (res["basic_info"]["is_new"].get<bool>())reply.Plain("是新歌哦~");
+							return reply;
+						}
+						catch (const invalid_argument& ex) {
+							return MessageChain().Plain("这真的是\"定数\"嘛？");
+						}
+					}
+					if (commands.size() == 4) {
+						try {
+							double minrating = stod(commands[2]);
+							double maxrating = stod(commands[3]);
+							json res = random_song(minrating, maxrating);
+							MessageChain reply;
+							reply.Plain("歌名：" + res["title"].get<string>() + '\n');
+							reply.Plain("谱面类型：" + res["type"].get<string>() + '\n');
+							reply.Plain("作者：" + res["basic_info"]["artist"].get<string>() + '\n');
+							reply.Plain("bpm：" + to_string(res["basic_info"]["bpm"].get<int>()) + '\n');
+							reply.Plain("定数：");
+							for (int i = 0; i < res["ds"].size(); ++i) {
+								reply.Plain(to_string(res["ds"][i].get<double>()));
+								if (i != res["ds"].size() - 1)reply.Plain("，");
+							}
+							reply.Plain('\n');
+							if (res["basic_info"]["is_new"].get<bool>())reply.Plain("是新歌哦~");
+							return reply;
+						}
+						catch (const invalid_argument& ex) {
+							return MessageChain().Plain("这真的是\"定数\"嘛？");
+						}
+					}
+				}
 			}
 			else if(commands.size()>=2) {
 				if(commands[1]=="随机歌曲") {
@@ -181,51 +227,6 @@ public:
 						reply.Plain('\n');
 						if (res["basic_info"]["is_new"].get<bool>())reply.Plain("是新歌哦~");
 						return reply;
-					}
-					if(commands.size()==3) {
-						try {
-							double rating = stod(commands[2]);
-							json res = random_song(rating);
-							MessageChain reply;
-							reply.Plain("歌名：" + res["title"].get<string>() + '\n');
-							reply.Plain("谱面类型：" + res["type"].get<string>() + '\n');
-							reply.Plain("作者：" + res["basic_info"]["artist"].get<string>() + '\n');
-							reply.Plain("bpm：" + to_string(res["basic_info"]["bpm"].get<int>()) + '\n');
-							reply.Plain("定数：");
-							for (int i = 0; i < res["ds"].size(); ++i) {
-								reply.Plain(to_string(res["ds"][i].get<double>()));
-								if (i != res["ds"].size() - 1)reply.Plain("，");
-							}
-							reply.Plain('\n');
-							if (res["basic_info"]["is_new"].get<bool>())reply.Plain("是新歌哦~");
-							return reply;
-						}
-						catch(const invalid_argument& ex) {
-							return MessageChain().Plain("这真的是\"定数\"嘛？");
-						}
-					}
-					if(commands.size()==4) {
-						try {
-							double minrating = stod(commands[2]);
-							double maxrating = stod(commands[3]);
-							json res = random_song(minrating,maxrating);
-							MessageChain reply;
-							reply.Plain("歌名：" + res["title"].get<string>() + '\n');
-							reply.Plain("谱面类型：" + res["type"].get<string>() + '\n');
-							reply.Plain("作者：" + res["basic_info"]["artist"].get<string>() + '\n');
-							reply.Plain("bpm：" + to_string(res["basic_info"]["bpm"].get<int>()) + '\n');
-							reply.Plain("定数：");
-							for (int i = 0; i < res["ds"].size(); ++i) {
-								reply.Plain(to_string(res["ds"][i].get<double>()));
-								if (i != res["ds"].size() - 1)reply.Plain("，");
-							}
-							reply.Plain('\n');
-							if (res["basic_info"]["is_new"].get<bool>())reply.Plain("是新歌哦~");
-							return reply;
-						}
-						catch (const invalid_argument& ex) {
-							return MessageChain().Plain("这真的是\"定数\"嘛？");
-						}
 					}
 				}
 			}
