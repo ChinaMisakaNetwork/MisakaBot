@@ -78,11 +78,10 @@ private:
 	}
 	*/
 public:
-	maimai() {
-		auto res = cpr::Get(cpr::Url{ "https://www.diving-fish.com/api/maimaidxprober/music_data" });
-		data = json::parse(res.text);
-	}
 	MessageChain handler(GroupMessage m) {
+		auto res = cpr::Get(cpr::Url{ "https://www.diving-fish.com/api/maimaidxprober/music_data" });
+		if (res.status_code == 404)return MessageChain().Plain("API错误");
+		data = json::parse(res.text);
 		stringstream sin((m.MessageChain.GetPlainText()));
 		vector<string>commands;
 		MessageChain msg;
