@@ -1,8 +1,6 @@
 ﻿#pragma once
 #include <mysql++.h>
-#include <ssqls.h>
 #include <mirai.h>
-#include <fstream>
 #include <string>
 using namespace std;
 using namespace Cyan;
@@ -17,12 +15,12 @@ protected:
 	int port;
 	string username;
 	string pwd;
-	bool connected = 0;
+	bool connected = false;
 	mysqlpp::Connection conn;
 	
 public:
 	mysqlpp::Query query = conn.query();
-	permchecker(db_info dbinf) {
+	explicit permchecker(db_info dbinf) {
 		db_name = dbinf.db_name;
 		db_addr = dbinf.db_addr;
 		port = dbinf.port;
@@ -31,16 +29,18 @@ public:
 		connected = conn.connect(db_name.c_str(), db_addr.c_str(), username.c_str(), pwd.c_str(), port);
 		query = conn.query();
 	}
-	bool checkperm(const int& groupid, const int& qq) {
-		query << "select * from qqadmin where groupid =" << mysqlpp::quote << to_string(groupid) << " and adminqq =" << mysqlpp::quote << to_string(qq);
-		mysqlpp::StoreQueryResult res=query.store();
+	bool checkperm(const long long& groupid, const long long& qq) {
+		query.reset();
+		query << "select * from qqadmin where groupid = %0q and adminqq= %1q";
+		query.parse();
+		const mysqlpp::StoreQueryResult res = query.store(groupid, qq);
 		return !res.empty();
 	}
-	MessageChain grantperm(const int& groupid, const int& qq) {
+	MessageChain grantperm(const long long& groupid, const long long& qq) {
 		query.reset();
-		query << "insert into qqadmin(groupid,adminqq) values (%0q,%1q)";
+		query << "insert into qqadmin(groupid , adminqq) values (%0q,%1q)";
 		query.parse();
-		mysqlpp::SimpleResult res=query.execute(groupid,qq);
+		const mysqlpp::SimpleResult res=query.execute(groupid,qq);
 		MessageChain result;
 		if (string(res.info()).empty()) {
 			result.Add<PlainMessage>("已添加");
@@ -50,11 +50,11 @@ public:
 		result.Add<PlainMessage>("出现错误，请查看终端以获取详细信息");
 		return result;
 	}
-	MessageChain deperm(const int& groupid, const int& qq) {
+	MessageChain deperm(const long long& groupid, const long long& qq) {
 		query.reset();
 		query << "delete from qqadmin where groupid = %0q and adminqq = %1q";
 		query.parse();
-		mysqlpp::SimpleResult res = query.execute(groupid, qq);
+		const mysqlpp::SimpleResult res = query.execute(groupid, qq);
 		MessageChain msg;
 		if (string(res.info()).empty()) {
 			msg.Add<PlainMessage>("已删除");

@@ -3,18 +3,14 @@
 #include "admin.hpp"
 #include <mysql++.h>
 #include <vector>
-#include <fstream>
 #include <cpr/cpr.h>
 using namespace std;
 using namespace Cyan;
 class chatobj :public permchecker{
-private:
-	db_info dbinfo;
-protected:
-
+	db_info dbinfo_;
 public:
-	chatobj(db_info dbf):permchecker(dbf) {
-		dbinfo = dbf;
+	explicit chatobj(const db_info dbf):permchecker(dbf) {
+		dbinfo_ = dbf;
 	}
 	MessageChain handler(GroupMessage m) {
 		MessageChain msg;
@@ -25,6 +21,7 @@ public:
 			query.reset();
 			query << "select * from miraichat where %0q regexp question order by char_length(question) desc";
 			query.parse();
+			// ReSharper disable once CppTooWideScopeInitStatement
 			mysqlpp::StoreQueryResult sres = query.store(s);
 			if (sres.size()>0) {
 				string ans = "";
@@ -47,6 +44,5 @@ public:
 			msg.Add<PlainMessage>("出现错误，请稍后再试");
 			return msg;
 		}
-		return msg;
 	}
 };

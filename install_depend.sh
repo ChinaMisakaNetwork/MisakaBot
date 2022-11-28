@@ -5,12 +5,11 @@ sudo apt install gcc -y --force-yes -qq;
 sudo apt install mysql-server -y --force-yes -qq;
 sudo apt install libmysql++-dev -y --force-yes -qq;
 sudo apt install cmake systemtap-sdt-dev manpages-posix-dev -y --force-yes -qq;
-cd /tmp;
+mkdir ./tmp;
+cd ./tmp;
 wget https://dev.mysql.com/get/Downloads/Connector-C++/libmysqlcppconn9_8.0.31-1ubuntu22.10_amd64.deb;
 sudo dpkg -i libmysqlcppconn9_8.0.31-1ubuntu22.10_amd64.deb;
-cd /usr/lib/x86_64-linux-gnu/
-sudo ln -s libmysqlclient.so libmysqlclient_r.so
-cd /tmp
+sudo ln -s /usr/lib/x86_64-linux-gnu/libmysqlclient.so /usr/lib/x86_64-linux-gnu/libmysqlclient_r.so
 wget https://tangentsoft.com/mysqlpp/releases/mysql++-3.3.0.tar.gz;
 tar -zxvf mysql++-3.3.0.tar.gz;
 cd mysql++-3.3.0

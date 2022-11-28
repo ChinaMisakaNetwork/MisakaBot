@@ -7,8 +7,6 @@
 #include <random>
 using namespace std;
 using namespace Cyan;
-//https://www.apifox.cn/apidoc/shared-e63772a9-debc-4e57-b30d-568bead9c81c/api-45194608
-//https://github.com/armoe-project/mihoyo-api
 class genshin {
 private:
 	string ltk, ltuid, ckt, accid;
@@ -28,7 +26,7 @@ private:
 	}
 	int getrand(int L,int R) {
 		mt19937 rnd(time(nullptr));
-		int res = (int)((1.0 * rnd() / UINT_MAX) * (R - L + 1)) + L;
+		const int res = static_cast<int>((1.0 * rnd() / UINT_MAX) * (R - L + 1)) + L;
 		return res;
 	}
 	cpr::Header getheader(string cookie,string body,string query) {
@@ -37,11 +35,10 @@ private:
 	}
 	const string salt = "xV8v4Qu54lUKrEYFZkJhB8cuOh9Asafs";
 	string get_ds(string body,string query) {
-		//wondering if need erase prob no
 		if(!query.empty())query.erase(query.begin());
 		string ts = to_string(time(nullptr));
-		int rnd = getrand(100000, 999999);
-		string get_ds = "salt=" + salt + "&t=" + ts + "&r=" + to_string(rnd) + "&b=" + body + "&q=" + query;
+		const int rnd = getrand(100000, 999999);
+		const string get_ds = "salt=" + salt + "&t=" + ts + "&r=" + to_string(rnd) + "&b=" + body + "&q=" + query;
 		return ts + ',' + to_string(rnd) + ',' + md5(get_ds);
 	}
 public:
@@ -57,6 +54,7 @@ public:
 		MessageChain msg;
 		string temp;
 		while (getline(sin, temp, ' ')) {
+			if (temp.empty())continue;
 			commands.push_back(temp);
 		}
 		if (commands.size() == 0)return MessageChain();

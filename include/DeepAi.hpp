@@ -22,6 +22,7 @@ public:
 		vector<string>commands;
 		string temp;
 		while (getline(sin, temp, '#')) {
+			if (temp.empty())continue;
 			commands.push_back(temp);
 		}
 		if (commands.size() == 0)return MessageChain();

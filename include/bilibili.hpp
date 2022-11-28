@@ -5,19 +5,18 @@
 using namespace std;
 using namespace Cyan;
 class bilibili {
-private:
-protected:
 public:
-	MessageChain handler(GroupMessage m) {
+	MessageChain handler(GroupMessage m) const {
 		stringstream sin(m.MessageChain.GetPlainText());
 		MessageChain msg;
 		vector<string>cmds;
 		string temp;
 		while (getline(sin, temp, ' ')) {
+			if (temp.empty())continue;
 			cmds.push_back(temp);
 		}
 		if (cmds.size() == 0)return msg;
-		if(*cmds.begin()=="bilibili搜索"|| *cmds.begin()=="哔哩哔哩搜索" || *cmds.begin()=="B站搜索") {
+		if(*cmds.begin()=="bilibili搜索"|| *cmds.begin()=="哔哩哔哩搜索" || *cmds.begin()=="B站搜索" || *cmds.begin()=="/bilibili") {
 			if(cmds.size()==2) {
 				if(cmds[1]=="热门视频") {
 					auto res = cpr::Get(cpr::Url{ "https://api.bilibili.com/x/web-interface/popular?ps=1&pn=1" });

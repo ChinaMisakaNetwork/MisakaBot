@@ -10,16 +10,16 @@ class commands :public permchecker{
 private:
 	db_info dbinfo;
 public:
-	commands(db_info dbinf) :permchecker(dbinf) {
+	explicit commands(const db_info dbinf) :permchecker(dbinf) {
 		dbinfo = dbinf;
 	}
 	MessageChain handler(GroupMessage m) {
-		MiraiBot& bot = m.GetMiraiBot();
 		MessageChain msg;
 		stringstream sin(m.MessageChain.GetPlainText());
 		vector<string>cmds;
 		string temp;
 		while (getline(sin, temp, ';')) {
+			if (temp.empty())continue;
 			cmds.push_back(temp);
 		}
 		if (cmds.size() == 0)return msg;

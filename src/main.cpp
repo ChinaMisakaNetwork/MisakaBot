@@ -6,6 +6,7 @@
 #include <cpr/cpr.h>
 #include <mutex>
 #include <string>
+#include <vector>
 #include "administrative.hpp"
 #include "deniedwords.hpp"
 #include "calc.hpp"
@@ -15,18 +16,22 @@
 #include "commands.hpp"
 #include "genshin.hpp"
 #include "minecraft.hpp"
+#include "watchdog.hpp"
 #include "neteasemusic.hpp"
 #include "weather.hpp"
 #include "record.hpp"
-#include "picture.hpp"
+#include "DeepAi.hpp"
 #include "bilibili.hpp"
+#include "maimai.hpp"
 using namespace std;
 using namespace Cyan;
-map<int, TrieAc>ACer;
-map<int, bool>wordcheck_list;
+map<long long, trie_ac>ACer;
+map<long long, bool>wordcheck_list;
 mutex ACer_lock, wordcheck_list_lock;
-map<int, mutex>fslock;
+map<long long, mutex>fslock;
+map<long long, mutex>wdl;
 string GenshinlToken, GenshinltUID, GenshinCookieToken, GenshinAccountId;
+map<long long, vector<watchdog::report>>report_list;
 MessageChain handle_message(GroupMessage m, db_info dbf, const string& deepai_key, const double& nsfw_value,const string& hypapi) {
 	neteasemusic music;
 	chatobj chat(dbf);
@@ -34,27 +39,30 @@ MessageChain handle_message(GroupMessage m, db_info dbf, const string& deepai_ke
 	bilibili bz;
 	hitokoto htkt;
 	recorder rcer;
+	maimai mai;
 	hypixel hyp(hypapi);
 	deepai_picture pic(deepai_key);
 	administrative admin(dbf);
 	deniedwords dw(dbf);
 	calc calculator;
+	watchdog wd(dbf);
 	wordchecker checker(dbf);
 	commands cmd(dbf);
 	genshin gs(GenshinlToken, GenshinltUID, GenshinCookieToken, GenshinAccountId);
 	rcer.handler(m, fslock);
 	MessageChain res;
+	res = dw.handler(m, ACer, wordcheck_list, ACer_lock, wordcheck_list_lock);
+	if (!res.Empty())return res;
 	res = checker.handler(m, ACer, wordcheck_list, deepai_key, nsfw_value);
+	if (!res.Empty())return res;
+	res = wd.handler(m, report_list, wdl);
 	if (!res.Empty())return res;
 	res = hyp.handler(m);
 	if (!res.Empty())return res;
-	res = dw.handler(m);
-	if (!res.Empty())return res;
 	res = admin.handler(m);
-	if (!res.Empty()) {
-		checker.init(ACer, wordcheck_list, ACer_lock, wordcheck_list_lock);
-		return res;
-	}
+	if (!res.Empty()) return res;
+	res = mai.handler(m);
+	if (!res.Empty())return res;
 	res = gs.handler(m);
 	if (!res.Empty())return res;
 	res = calculator.handler(m);
@@ -80,10 +88,10 @@ reboot:
 #if defined(WIN32) || defined(_WIN32)
 	system("chcp 65001");
 #endif
+	system("clear");
 	MiraiBot bot;
 	SessionOptions opts;
 	ifstream fin;
-	ofstream fout;
 	double nsfw_value;
 	string deepai_key;
 	db_info db_information;
@@ -92,6 +100,7 @@ reboot:
 	string welcomemessage = "";
 	fin.open("/etc/MisakaBot/MisakaBot.conf");
 	if (!fin.good()) {
+		ofstream fout;
 		cout << "Conf file isn't exist." << endl;
 		fout.open("/etc/MisakaBot/MisakaBot.conf");
 		if(!fout.good())system("mkdir /etc/MisakaBot");
@@ -103,39 +112,37 @@ reboot:
 		cout << "Conf created at /etc/MisakaBot/MisakaBot.conf , please edit it and restart the Bot." << endl;
 		return 1;
 	}
-	else {
-		vector<string>conf;
-		string temp;
-		while (fin >> temp) {
-			for (auto i = temp.begin(); i != temp.end(); ++i) {
-				if (*i == '=') {
-					conf.push_back(string(i+1,temp.end()));
-				}
+	vector<string>conf;
+	string temp;
+	while (fin >> temp) {
+		for (auto i = temp.begin(); i != temp.end(); ++i) {
+			if (*i == '=') {
+				conf.push_back(string(i+1,temp.end()));
 			}
 		}
-		opts.BotQQ = QQ_t((stoi(conf[0])));				// 请修改为你的机器人QQ
-		opts.HttpHostname = conf[1];		// 请修改为和 mirai-api-http 配置文件一致
-		opts.WebSocketHostname = conf[2];	// 同上
-		opts.HttpPort = stoi(conf[3]);					// 同上
-		opts.WebSocketPort = stoi(conf[4]);				// 同上
-		opts.VerifyKey = conf[5];
-		opts.ThreadPoolSize = 6;// 同上
-		db_information.db_name = conf[6];
-		db_information.db_addr = conf[7];
-		db_information.db_username = conf[8];
-		db_information.db_password = conf[9];
-		db_information.port = atoi(conf[10].c_str());
-		welcomemessage = conf[11];
-		deepai_key = conf[12];
-		nsfw_value = atof(conf[13].c_str());
-		GenshinlToken = conf[14];
-		GenshinltUID = conf[15];
-		GenshinCookieToken = conf[16];
-		GenshinAccountId = conf[17];
-		hypapi = conf[18];
-		wordchecker wordchecker_init(db_information);
-		wordchecker_init.init(ACer,wordcheck_list,ACer_lock,wordcheck_list_lock);
 	}
+	opts.BotQQ = QQ_t((stoi(conf[0])));
+	opts.HttpHostname = conf[1];
+	opts.WebSocketHostname = conf[2];
+	opts.HttpPort = stoi(conf[3]);
+	opts.WebSocketPort = stoi(conf[4]);
+	opts.VerifyKey = conf[5];
+	opts.ThreadPoolSize = 6;
+	db_information.db_name = conf[6];
+	db_information.db_addr = conf[7];
+	db_information.db_username = conf[8];
+	db_information.db_password = conf[9];
+	db_information.port = atoi(conf[10].c_str());
+	welcomemessage = conf[11];
+	deepai_key = conf[12];
+	nsfw_value = atof(conf[13].c_str());
+	GenshinlToken = conf[14];
+	GenshinltUID = conf[15];
+	GenshinCookieToken = conf[16];
+	GenshinAccountId = conf[17];
+	hypapi = conf[18];
+	wordchecker wordchecker_init(db_information);
+	wordchecker_init.init(ACer,wordcheck_list,ACer_lock,wordcheck_list_lock);
 	while (true){
 		try{
 			cout << "尝试连接指定的Bot…" << endl;
@@ -153,15 +160,11 @@ reboot:
 			try {
 				MessageChain mc = handle_message(m, db_information, deepai_key, nsfw_value, hypapi);
 				if(!mc.Empty()) {
-					mc.Insert(mc.begin(), AtMessage(m.Sender.QQ));
+					mc = MessageChain().At(m.Sender.QQ).Plain("\n") + mc;
 					bot.SendMessage(m.Sender.Group.GID, mc);
 				}
 			}
-			catch (const std::exception& ex) {
-				if (ex.what() == "网络错误.")goto skip;
-				cout << ex.what() << endl;
-			skip:;
-			}
+			catch (...) {}
 		});
 	bot.On<NewFriendRequestEvent>([&](NewFriendRequestEvent e) {
 		e.Accept();
@@ -177,6 +180,17 @@ reboot:
 				mc.Add<PlainMessage>(welcomemessage);
 				bot.SendMessage(m.NewMember.Group.GID, mc);
 			}catch(...){}
+		});
+	bot.On<FriendMessage>(
+		[&](FriendMessage m) {
+			try {
+				watchdog wd(db_information);
+				const MessageChain mc = wd.handler(m, report_list, wdl);
+				if (!mc.Empty()) {
+					bot.SendMessage(m.Sender.QQ, mc);
+				}
+			}
+			catch (...) {}
 		});
 	bot.On<LostConnection>([&](LostConnection e){
 			cout << e.ErrorMessage << " (" << e.Code << ")" << endl;
@@ -203,11 +217,12 @@ reboot:
 			commands.push_back(temp);
 		}
 		if (commands.size() == 0)goto cont;
-		if (cmd == "exit") {
+		if (cmd == "/stop" || cmd=="/exit") {
 			bot.Disconnect();
 			break;
 		}
-		if (cmd == "reboot") {
+		if (cmd == "/reboot" || cmd=="/restart") {
+			system("clear");
 			bot.Disconnect();
 			commands.clear();
 			goto reboot;
@@ -246,22 +261,22 @@ reboot:
 			wordchecker checker(db_information);
 			checker.init(ACer, wordcheck_list, ACer_lock, wordcheck_list_lock);
 		}
-		if (*commands.begin() == "添加管理员") {
+		if (*commands.begin() == "/op") {
 			if (commands.size() != 3) {
 				cout << "格式错误" << endl;
 				goto cont;
 			}
 			permchecker db(db_information);
-			string res = db.grantperm(atoi(commands[1].c_str()), atoi(commands[2].c_str())).GetPlainText();
+			string res = db.grantperm(atoll(commands[1].c_str()), atoll(commands[2].c_str())).GetPlainText();
 			cout << res << endl;
 		}
-		if (*commands.begin() == "删除管理员") {
+		if (*commands.begin() == "/deop") {
 			if (commands.size() != 3) {
 				cout << "格式错误" << endl;
 				goto cont;
 			}
 			permchecker db(db_information);
-			string res = db.deperm(atoi(commands[1].c_str()), atoi(commands[2].c_str())).GetPlainText();
+			string res = db.deperm(atoll(commands[1].c_str()), atoll(commands[2].c_str())).GetPlainText();
 			cout << res << endl;
 		}
 	cont:;

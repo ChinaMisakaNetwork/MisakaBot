@@ -12,14 +12,14 @@ class hitokoto {
 private:
 protected:
 public:
-	MessageChain handler(GroupMessage m) {
+	MessageChain handler(GroupMessage m) const {
 		MessageChain msg;
 		if (m.MessageChain.GetPlainText() == "一言") {
 			try {
 				auto res = cpr::Get(cpr::Url{ "https://v1.hitokoto.cn/" });
 				json reply = json::parse(res.text);
-				string htkt = reply["hitokoto"].get<string>();
-				string from = reply["from"].get<string>();
+				auto htkt = reply["hitokoto"].get<string>();
+				auto from = reply["from"].get<string>();
 				string id = to_string(reply["id"].get<int>());
 				string ans = "";
 				ans += htkt;
