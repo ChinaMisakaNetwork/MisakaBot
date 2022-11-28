@@ -9,26 +9,24 @@
 using namespace std;
 using namespace Cyan;
 class wordchecker :public permchecker{
-private:
 	db_info dbinf;
 public:
 	wordchecker(db_info dbinf1) :permchecker(dbinf1) {
 		dbinf = dbinf1;
 	}
-	void init(map<int, TrieAc>& ACer, map<int, bool>& enabled,mutex& ACer_lock, mutex &wordcheck_list_lock) {
-		map<int, vector<string>>temp;
+	void init(map<long long, trie_ac>& ACer, map<long long, bool>& enabled,mutex& ACer_lock, mutex &wordcheck_list_lock) {
 		ACer_lock.lock();
 		wordcheck_list_lock.lock();
 		ACer.clear();
 		enabled.clear();
 		query.reset();
 		query << "select * from deniedwords";
-		mysqlpp::StoreQueryResult res = query.store();
-		if (res) {
+		if (const mysqlpp::StoreQueryResult res = query.store()) {
+			map<int, vector<string>> temp;
 			for (size_t i = 0; i < res.num_rows(); ++i) {
 				string m;
 				res[i]["groupid"].to_string(m);
-				int groupid = atoi(m.c_str());
+				const long long groupid = atoll(m.c_str());
 				string s;
 				res[i]["word"].to_string(s);
 				temp[groupid].push_back(s);
@@ -43,7 +41,7 @@ public:
 		ACer_lock.unlock();
 		wordcheck_list_lock.unlock();
 	}
-	MessageChain handler(GroupMessage m, map<int, TrieAc>& ACer, map<int, bool>& enabled,string deepai_key,const double& nsfw_value) {
+	MessageChain handler(GroupMessage m, map<long long, trie_ac>& ACer, map<long long, bool>& enabled,string deepai_key,const double& nsfw_value) {
 		MiraiBot& bot = m.GetMiraiBot();
 		MessageChain msg;
 		string temp = m.MessageChain.GetPlainText();
@@ -74,8 +72,7 @@ public:
 				double score = reply["output"]["nsfw_score"].get<double>();
 				if (score >= nsfw_value) {
 					bot.Recall(m.MessageId(), m.Sender.Group.GID);
-					msg.Plain('\n' + "您这图片在这发不太合适吧…");
-					return msg;
+					return MessageChain().Plain('\n' + "您这图片在这发不太合适吧…");
 				}
 			}
 		}catch(...){}

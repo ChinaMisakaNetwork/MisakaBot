@@ -7,9 +7,9 @@ using namespace Cyan;
 using namespace std;
 class neteasemusic {
 public:
-    MessageChain search(vector<string>commands) {
-        MessageChain msg;
+    MessageChain search(vector<string>commands) const {
         if (*commands.begin() == "搜歌") {
+            MessageChain msg;
             if (commands.size() != 2) {
 				msg.Add<PlainMessage>("参数错误");
                 return msg;
@@ -19,6 +19,9 @@ public:
                 auto res = cpr::Get(cpr::Url{ "https://v1.hitokoto.cn/nm/search/" + commands[1]});
                 json data = json::parse(res.text);
                 json reply = data["result"]["songs"];
+                if (reply.empty()) {
+                    return MessageChain().Plain("未找到结果");
+                }
                 for (auto i = reply.begin(); i != reply.end() && (i-reply.begin())<=10; ++i) {
                     string ans;
                     ans += to_string(i-reply.begin() + 1);
@@ -42,12 +45,11 @@ public:
         }
         return MessageChain();
     }
-    MessageChain sing(GroupMessage m, vector<string>commands) {
+    static MessageChain sing(GroupMessage m, vector<string>commands) {
         if (*commands.begin() != "唱歌")return MessageChain();
         MessageChain msg;
         if (commands.size() != 2) {
             return msg.Add<PlainMessage>("格式错误，请检查格式");
-            return msg;
         }
         try {
             MiraiBot& bot = m.GetMiraiBot();
@@ -66,9 +68,11 @@ public:
         vector<string>commands;
         string temp;
         while (getline(sin, temp, ' ')) {
+            if (temp.empty())continue;
             commands.push_back(temp);
         }
         if (commands.size() == 0)return MessageChain();
+        // ReSharper disable once CppTooWideScopeInitStatement
         MessageChain search1 = search(commands);
         if (!search1.Empty())return search1;
         return sing(m, commands);

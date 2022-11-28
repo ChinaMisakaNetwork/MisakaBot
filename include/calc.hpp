@@ -10,12 +10,13 @@ using namespace std;
 using namespace Cyan;
 class calc {
 public:
-	MessageChain handler(GroupMessage m) {
+	MessageChain handler(GroupMessage m) const {
         vector<string>commands;
         MessageChain msg;
         stringstream sin(m.MessageChain.GetPlainText());
         string temp;
         while (getline(sin, temp, ' ')) {
+            if (temp.empty())continue;
             commands.push_back(temp);
         }
         if (commands.size() == 0)return msg;

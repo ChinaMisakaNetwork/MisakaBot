@@ -6,15 +6,14 @@ using namespace std;
 using namespace Cyan;
 //http://autodev.openspeech.cn/csp/api/v2.1/weather?openId=aiuicus&clientType=android&sign=android&city=城市&needMoreData=true&pageNo=1&pageSize=7
 class weather {
-private:
-protected:
 public:
-	MessageChain handler(GroupMessage m) {
+	MessageChain handler(GroupMessage m) const {
 		MessageChain msg;
 		stringstream sin(m.MessageChain.GetPlainText());
 		vector<string>cmds;
 		string temp;
 		while (getline(sin, temp, ' ')) {
+			if (temp.empty())continue;
 			cmds.push_back(temp);
 		}
 		if (cmds.size() == 0)return MessageChain();
@@ -49,7 +48,7 @@ public:
 				ans += i->at("humidity").get<string>();
 				ans += "，风向";
 				ans += i->at("wind").get<string>();
-				if (i->find("airData") != reply.end() && i->find("airQuality")!=reply.end() && i->find("pm25")!=reply.end()) {
+				if (i->find("airData") != i->end() && i->find("airQuality")!=i->end() && i->find("pm25")!=i->end()) {
 					ans += "，空气质量指数：";
 					ans += i->at("airData").get<string>();
 					ans += "（";

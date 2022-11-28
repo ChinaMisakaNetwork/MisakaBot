@@ -7,7 +7,7 @@ using namespace std;
 using namespace Cyan;
 class administrative :public permchecker {
 public:
-	administrative(db_info dbinf):permchecker(dbinf) {
+	explicit administrative(db_info dbinf):permchecker(dbinf) {
 		
 	}
 	MessageChain handler(GroupMessage m) {
@@ -17,10 +17,11 @@ public:
 		vector<string>commands;
 		string temp;
 		while (getline(sin, temp, ' ')) {
+			if (temp.empty())continue;
 			commands.push_back(temp);
 		}
 		if (commands.size() == 0)return msg;
-		if (*commands.begin() == "禁言") {
+		if (*commands.begin() == "/mute") {
 			if (!checkperm(m.Sender.Group.GID.ToInt64(), m.Sender.QQ.ToInt64())) {
 				msg.Add<PlainMessage>("您不是本群的管理员");
 				return msg;
@@ -35,14 +36,15 @@ public:
 				return msg;
 			}
 		}
-		if (*commands.begin() == "踢出") {
+		if (*commands.begin() == "/kick") {
 			if (!checkperm(m.Sender.Group.GID.ToInt64(), m.Sender.QQ.ToInt64())) {
 				msg.Add<PlainMessage>("您不是本群的管理员");
 				return msg;
 			}
-			if (commands.size() != 2)return msg;
+			if (commands.size() != 2 && commands.size()!=3)return msg;
 			try {
-				bot.Kick(m.Sender.Group.GID, QQ_t(atoi(commands[1].c_str())));
+				if (commands.size() == 2)bot.Kick(m.Sender.Group.GID, QQ_t(atoi(commands[1].c_str())));
+				else bot.Kick(m.Sender.Group.GID, QQ_t(atoi(commands[1].c_str())), commands[2]);
 			}
 			catch (const exception& ex) {
 				cout << ex.what() << endl;
@@ -50,7 +52,7 @@ public:
 				return msg;
 			}
 		}
-		if (*commands.begin() == "取消禁言") {
+		if (*commands.begin() == "/unmute") {
 			if (!checkperm(m.Sender.Group.GID.ToInt64(), m.Sender.QQ.ToInt64())) {
 				msg.Add<PlainMessage>("您不是本群的管理员");
 				return msg;
@@ -65,7 +67,7 @@ public:
 				return msg;
 			}
 		}
-		if (*commands.begin() == "添加管理员") {
+		if (*commands.begin() == "/op") {
 			if (!checkperm(m.Sender.Group.GID.ToInt64(), m.Sender.QQ.ToInt64())) {
 				msg.Add<PlainMessage>("您不是本群的管理员");
 				return msg;
@@ -87,7 +89,7 @@ public:
 				
 			}
 		}
-		if (*commands.begin() == "全体禁言") {
+		if (*commands.begin() == "/muteall") {
 			if (!checkperm(m.Sender.Group.GID.ToInt64(), m.Sender.QQ.ToInt64())) {
 				msg.Add<PlainMessage>("您不是本群的管理员");
 				return msg;
@@ -101,7 +103,7 @@ public:
 				return msg;
 			}
 		}
-		if (*commands.begin() == "全体解禁") {
+		if (*commands.begin() == "/unmuteall") {
 			if (!checkperm(m.Sender.Group.GID.ToInt64(), m.Sender.QQ.ToInt64())) {
 				msg.Add<PlainMessage>("您不是本群的管理员");
 				return msg;
