@@ -103,7 +103,7 @@ public:
 							MessageChain reply;
 							reply.Plain("结果如下：\n");
 							for (auto i : res) {
-								reply.Plain(i.first.at("id") + ". " + i.first.at("title") + "谱面类型：" + i.first.at("type") + "定数：" + to_string(i.second) + '\n');
+								reply.Plain(i.first.at("id").get<string>() + ". " + i.first.at("title").get<string>() + "谱面类型：" + i.first.at("type").get<string>() + "定数：" + to_string(i.second) + '\n');
 							}
 							return reply;
 						}
