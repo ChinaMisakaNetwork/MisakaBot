@@ -162,5 +162,6 @@ public:
 			}
 			else return MessageChain().Plain("请检查输入");
 		}
+		return MessageChain();
 	}
 };
