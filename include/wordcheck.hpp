@@ -41,7 +41,7 @@ public:
 		ACer_lock.unlock();
 		wordcheck_list_lock.unlock();
 	}
-	MessageChain handler(GroupMessage m, map<long long, trie_ac>& ACer, map<long long, bool>& enabled,string deepai_key,const double& nsfw_value) {
+	MessageChain handler(GroupMessage m, map<long long, trie_ac>& ACer, map<long long, bool>& enabled,string deepai_key,const double& nsfw_value,const bool& nsfw_enabled) {
 		MiraiBot& bot = m.GetMiraiBot();
 		MessageChain msg;
 		string temp = m.MessageChain.GetPlainText();
@@ -61,6 +61,7 @@ public:
 		//Image nsfw check
 		chkpicture:
 		try {
+			if (!nsfw_enabled)return MessageChain();
 			if (deepai_key.empty())return msg;
 			vector<ImageMessage>mc = m.MessageChain.GetAll<ImageMessage>();
 			for (ImageMessage& i : mc) {

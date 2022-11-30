@@ -32,7 +32,7 @@ map<long long, mutex>fslock;
 map<long long, mutex>wdl;
 string GenshinlToken, GenshinltUID, GenshinCookieToken, GenshinAccountId;
 map<long long, vector<watchdog::report>>report_list;
-MessageChain handle_message(GroupMessage m, db_info dbf, const string& deepai_key, const double& nsfw_value,const string& hypapi) {
+MessageChain handle_message(GroupMessage m, db_info dbf, const string& deepai_key, const double& nsfw_value,const string& hypapi,const bool& nsfw_enabled) {
 	neteasemusic music;
 	chatobj chat(dbf);
 	weather wt;
@@ -53,7 +53,7 @@ MessageChain handle_message(GroupMessage m, db_info dbf, const string& deepai_ke
 	MessageChain res;
 	res = dw.handler(m, ACer, wordcheck_list, ACer_lock, wordcheck_list_lock);
 	if (!res.Empty())return res;
-	res = checker.handler(m, ACer, wordcheck_list, deepai_key, nsfw_value);
+	res = checker.handler(m, ACer, wordcheck_list, deepai_key, nsfw_value,nsfw_enabled);
 	if (!res.Empty())return res;
 	res = wd.handler(m, report_list, wdl);
 	if (!res.Empty())return res;
@@ -96,6 +96,7 @@ reboot:
 	string deepai_key;
 	db_info db_information;
 	string genshinapi;
+	bool nsfw_enabled = false;
 	string hypapi;
 	string welcomemessage = "";
 	fin.open("/etc/MisakaBot/MisakaBot.conf");
@@ -107,8 +108,8 @@ reboot:
 		fout.open("/etc/MisakaBot/MisakaBot.conf");
 		fout << "BotQQ=12345678" << endl << "HttpHostname=localhost" << endl << "WebSocketHostname=localhost" << endl << "HttpPort=8080" << endl << "WebSocketPort=8080" << endl
 			<< "VerifyKey=VerifyKey" << endl << "MySQLdatabase=DatabaseName" << endl << "MySQLaddress=localhost" << endl << "MySQLusername=username" << endl << "MySQLpassword=password" << endl
-			<< "MySQLconnectPort=3306" << endl << "入群欢迎词=欢迎词" << endl << "DeepaiKey=Key" << endl << "nsfw_value=0.75" << endl
-			<< "GenshinlToken=Token" << endl << "GenshinltUID=UID" << endl << "GenshinCookieToken=Token" << endl << "GenshinAccountId=AccountID" << endl << "HypixelAPIKey=APIKey";
+			<< "MySQLconnectPort=3306" << endl << "入群欢迎词=欢迎词" << endl << "DeepaiKey=Key" << endl << "nsfw_value=0.75" << endl << "nsfw_enabled=false" << endl
+			<< "GenshinlToken=" << endl << "GenshinltUID=" << endl << "GenshinCookieToken=" << endl << "GenshinAccountId=" << endl << "HypixelAPIKey=";
 		cout << "Conf created at /etc/MisakaBot/MisakaBot.conf , please edit it and restart the Bot." << endl;
 		return 1;
 	}
@@ -136,11 +137,12 @@ reboot:
 	welcomemessage = conf[11];
 	deepai_key = conf[12];
 	nsfw_value = atof(conf[13].c_str());
-	GenshinlToken = conf[14];
-	GenshinltUID = conf[15];
-	GenshinCookieToken = conf[16];
-	GenshinAccountId = conf[17];
-	hypapi = conf[18];
+	if (conf[14] == "true")nsfw_enabled = true;
+	GenshinlToken = conf[15];
+	GenshinltUID = conf[16];
+	GenshinCookieToken = conf[17];
+	GenshinAccountId = conf[18];
+	hypapi = conf[19];
 	wordchecker wordchecker_init(db_information);
 	wordchecker_init.init(ACer,wordcheck_list,ACer_lock,wordcheck_list_lock);
 	while (true){
@@ -158,7 +160,7 @@ reboot:
 	bot.On<GroupMessage>(
 		[&](GroupMessage m) {
 			try {
-				MessageChain mc = handle_message(m, db_information, deepai_key, nsfw_value, hypapi);
+				MessageChain mc = handle_message(m, db_information, deepai_key, nsfw_value, hypapi, nsfw_enabled);
 				if(!mc.Empty()) {
 					mc = MessageChain().At(m.Sender.QQ).Plain("\n") + mc;
 					bot.SendMessage(m.Sender.Group.GID, mc);
@@ -185,10 +187,11 @@ reboot:
 		[&](FriendMessage m) {
 			try {
 				watchdog wd(db_information);
-				const MessageChain mc = wd.handler(m, report_list, wdl);
-				if (!mc.Empty()) {
-					bot.SendMessage(m.Sender.QQ, mc);
-				}
+				administrative admin(db_information);
+				MessageChain mc = wd.handler(m, report_list, wdl);
+				if (!mc.Empty())bot.SendMessage(m.Sender.QQ, mc);
+				mc = admin.handler(m);
+				if (!mc.Empty())bot.SendMessage(m.Sender.QQ, mc);
 			}
 			catch (...) {}
 		});
