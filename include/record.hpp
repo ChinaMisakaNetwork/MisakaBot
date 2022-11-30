@@ -25,7 +25,7 @@ public:
 		pfs.close();
 		const time_t lol = m.Timestamp();
 		const tm sendtime = *localtime(&lol);
-		fs << "消息ID：" << to_string(m.MessageId()) << to_string(sendtime.tm_year + 1900) + "年" + to_string(sendtime.tm_mon + 1) + "月" + to_string(sendtime.tm_mday) + "日" + to_string(sendtime.tm_hour) + "时" + to_string(sendtime.tm_min) + "分" + to_string(sendtime.tm_sec) + "秒 ::::" << " 发送者：" << m.Sender.QQ.ToInt64() << " 内容：" << s << "\n";
+		fs << "消息ID：" << to_string(m.MessageId()) << ' ' << to_string(sendtime.tm_year + 1900) + "年" + to_string(sendtime.tm_mon + 1) + "月" + to_string(sendtime.tm_mday) + "日" + to_string(sendtime.tm_hour) + "时" + to_string(sendtime.tm_min) + "分" + to_string(sendtime.tm_sec) + "秒 ::::" << " 发送者：" << m.Sender.QQ.ToInt64() << " 内容：" << s << "\n";
 		vector<ImageMessage>mc = m.MessageChain.GetAll<ImageMessage>();
 		if(!mc.empty()) {
 			fs << "图片ID: ";
