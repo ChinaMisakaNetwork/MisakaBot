@@ -166,7 +166,7 @@ public:
 				msg.Add<PlainMessage>("您不是本群的管理员");
 				return msg;
 			}
-			if (commands.size() != 2)return msg;
+			if (commands.size() != 3)return msg;
 			try {
 				bot.UnMute(GID_t(stoll(commands[1])), QQ_t(atoll(commands[2].c_str())));
 			}
@@ -181,7 +181,7 @@ public:
 				msg.Add<PlainMessage>("您不是本群的管理员");
 				return msg;
 			}
-			if (commands.size() != 2)return msg;
+			if (commands.size() != 3)return msg;
 			return grantperm(stoll(commands[1]), stoll(commands[2]));
 		}
 		if (*commands.begin() == "更改群名片") {
@@ -189,7 +189,7 @@ public:
 				msg.Add<PlainMessage>("您不是本群的管理员");
 				return msg;
 			}
-			if (commands.size() != 3)return msg;
+			if (commands.size() != 4)return msg;
 			try {
 				bot.SetGroupMemberName(GID_t(stoll(commands[1])), QQ_t(atoll(commands[2].c_str())), commands[3]);
 				msg.Add<PlainMessage>("更改成功");
@@ -200,6 +200,7 @@ public:
 			}
 		}
 		if (*commands.begin() == "/muteall") {
+			if (commands.size() != 2)return msg;
 			if (!checkperm(stoll(commands[1]), m.Sender.QQ.ToInt64())) {
 				msg.Add<PlainMessage>("您不是本群的管理员");
 				return msg;
@@ -214,6 +215,7 @@ public:
 			}
 		}
 		if (*commands.begin() == "/unmuteall") {
+			if (commands.size() != 2)return msg;
 			if (!checkperm(stoll(commands[1]), m.Sender.QQ.ToInt64())) {
 				msg.Add<PlainMessage>("您不是本群的管理员");
 				return msg;
