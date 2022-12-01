@@ -3,8 +3,7 @@ cmake_minimum_required (VERSION 3.1)
 # 项目名称（建议修改）
 project(MisakaBot)
 # 设置项目的 C++ 标准
-set(CMAKE_CXX_STANDARD 17)
-
+set(CMAKE_CXX_STANDARD 20)
 # 不要构建 mirai-cpp 自带的 examples
 set(MIRAI_CPP_BUILD_EXAMPLES OFF CACHE BOOL "Build examples" FORCE)
 # 添加子模块 mirai-cpp
@@ -26,12 +25,18 @@ include_directories("/usr/include/mysql")
 # 链接 mirai-cpp
 target_link_libraries(${PROJECT_NAME} PRIVATE mirai-cpp)
 target_link_libraries(${PROJECT_NAME} PRIVATE cpr)
+target_link_libraries(${PROJECT_NAME} PRIVATE mysqlpp)
 # 使用 mirai-cpp 静态库
 target_compile_definitions(${PROJECT_NAME} PRIVATE MIRAICPP_STATICLIB)
-target_link_libraries(${PROJECT_NAME} PRIVATE -lmysqlpp)
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     # 链接 pthread
     target_link_libraries(${PROJECT_NAME} PRIVATE pthread)
     # 静态链接 libgcc 和 libstdc++
     target_link_libraries(${PROJECT_NAME} PRIVATE -static-libgcc -static-libstdc++)
 endif()
+include (InstallRequiredSystemLibraries)
+set (CPACK_RESOURCE_FILE_LICENSE  
+     "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+set (CPACK_PACKAGE_VERSION_MAJOR "${VERSION_MAJOR}")
+set (CPACK_PACKAGE_VERSION_MINOR "${VERSION_MINOR}")
+include (CPack)

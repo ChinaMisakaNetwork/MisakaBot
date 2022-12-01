@@ -17,7 +17,6 @@ protected:
 	string pwd;
 	bool connected = false;
 	mysqlpp::Connection conn;
-	
 public:
 	mysqlpp::Query query = conn.query();
 	explicit permchecker(db_info dbinf) {
