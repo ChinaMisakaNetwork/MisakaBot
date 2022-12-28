@@ -83,6 +83,18 @@ MessageChain handle_message(GroupMessage m, db_info dbf, const string& deepai_ke
 	if (!res.Empty())return res;
 	return MessageChain();
 }
+MessageChain handle_message(FriendMessage m,db_info db_information){
+    watchdog wd(db_information);
+    administrative admin(db_information);
+    chatobj chater(db_information);
+    MessageChain mc;
+    mc = wd.handler(m, report_list, wdl);
+    if (!mc.Empty())return mc;
+    mc = admin.handler(m);
+    if (!mc.Empty())return mc;
+    mc = chater.handler(m);
+    if(!mc.Empty())return mc;
+}
 int main(int argc,const char* argv[]) {
 reboot:
 #if defined(WIN32) || defined(_WIN32)
@@ -162,11 +174,15 @@ reboot:
 			try {
 				MessageChain mc = handle_message(m, db_information, deepai_key, nsfw_value, hypapi, nsfw_enabled);
 				if(!mc.Empty()) {
-					mc = MessageChain().At(m.Sender.QQ).Plain("\n") + mc;
-					bot.SendMessage(m.Sender.Group.GID, mc);
+					MessageChain reply;
+					reply.At(m.Sender.QQ);
+					reply = reply + mc;
+					bot.SendMessage(m.Sender.Group.GID, reply);
 				}
 			}
-			catch (...) {}
+			catch (const exception& ex) {
+				cerr << ex.what() << endl;
+			}
 		});
 	bot.On<NewFriendRequestEvent>([&](NewFriendRequestEvent e) {
 		e.Accept();
@@ -186,12 +202,8 @@ reboot:
 	bot.On<FriendMessage>(
 		[&](FriendMessage m) {
 			try {
-				watchdog wd(db_information);
-				administrative admin(db_information);
-				MessageChain mc = wd.handler(m, report_list, wdl);
-				if (!mc.Empty())bot.SendMessage(m.Sender.QQ, mc);
-				mc = admin.handler(m);
-				if (!mc.Empty())bot.SendMessage(m.Sender.QQ, mc);
+                MessageChain mc=handle_message(m,db_information);
+                if(!mc.Empty())bot.SendMessage(m.Sender.QQ,mc);
 			}
 			catch (...) {}
 		});

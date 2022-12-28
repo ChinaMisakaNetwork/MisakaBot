@@ -22,7 +22,7 @@ public:
 		query.reset();
 		query << "select * from deniedwords";
 		if (const mysqlpp::StoreQueryResult res = query.store()) {
-			map<int, vector<string>> temp;
+			map<long long, vector<string>> temp;
 			for (size_t i = 0; i < res.num_rows(); ++i) {
 				string m;
 				res[i]["groupid"].to_string(m);
@@ -44,9 +44,9 @@ public:
 	MessageChain handler(GroupMessage m, map<long long, trie_ac>& ACer, map<long long, bool>& enabled,string deepai_key,const double& nsfw_value,const bool& nsfw_enabled) {
 		MiraiBot& bot = m.GetMiraiBot();
 		MessageChain msg;
-		string temp = m.MessageChain.GetPlainText();
 		set<int>pair_res;
-		if (m.MessageChain.GetPlainText().empty())goto chkpicture;;
+		string temp;
+		if (m.MessageChain.GetPlainText().empty())goto chkpicture;
 		if (!enabled[m.Sender.Group.GID.ToInt64()])return MessageChain();
 		ACer[m.Sender.Group.GID.ToInt64()].match(temp,pair_res);
 		if (!pair_res.empty()) {
@@ -56,6 +56,19 @@ public:
 				msg.Add<PlainMessage>("请注意言辞");
 			}
 			catch (...) {
+			}
+		}
+		if (m.MessageChain.GetAll<ForwardMessage>().empty())goto chkpicture;
+		for (auto i : m.MessageChain.GetFirst<ForwardMessage>().NodeList()) {
+			ACer[m.Sender.Group.GID.ToInt64()].match(i.MessageChain.GetPlainText(), pair_res);
+			if (!pair_res.empty()) {
+				try {
+					bot.Recall(m.MessageId(), m.Sender.Group.GID);
+					bot.Mute(m.Sender.Group.GID, m.Sender.QQ, 60);
+					msg.Add<PlainMessage>("请注意言辞");
+				}
+				catch (...) {
+				}
 			}
 		}
 		//Image nsfw check
@@ -77,6 +90,24 @@ public:
 				}
 			}
 		}catch(...){}
+		if (m.MessageChain.GetAll<ForwardMessage>().empty())return MessageChain();
+		for (auto i : m.MessageChain.GetFirst<ForwardMessage>().NodeList()) {
+			for (ImageMessage& j : i.MessageChain.GetAll<ImageMessage>()) {
+				try {
+					auto res = cpr::Post(cpr::Url{ "https://api.deepai.org/api/nsfw-detector" },
+						cpr::Payload{ {"image",j.Url()},
+						},
+						cpr::Header{ {"Api-Key",deepai_key} });
+					json reply = json::parse(res.text);
+					double score = reply["output"]["nsfw_score"].get<double>();
+					if (score >= nsfw_value) {
+						bot.Recall(m.MessageId(), m.Sender.Group.GID);
+						return MessageChain().Plain('\n' + "您这图片在这发不太合适吧…");
+					}
+				}
+				catch (...) {}
+			}
+		}
 		return MessageChain();
 	}
 };

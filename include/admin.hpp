@@ -2,6 +2,7 @@
 #include <mysql++.h>
 #include <mirai.h>
 #include <string>
+#include <mutex>
 using namespace std;
 using namespace Cyan;
 struct db_info {
@@ -29,38 +30,54 @@ public:
 		query = conn.query();
 	}
 	bool checkperm(const long long& groupid, const long long& qq) {
+        mysqlpp::StoreQueryResult res;
+        retry:
 		query.reset();
 		query << "select * from qqadmin where groupid = %0q and adminqq= %1q";
 		query.parse();
-		const mysqlpp::StoreQueryResult res = query.store(groupid, qq);
+        try {
+            res = query.store(groupid, qq);
+        }catch(const exception& ex){
+            cerr<<ex.what()<<endl;
+            goto retry;
+        }
+        
 		return !res.empty();
 	}
 	MessageChain grantperm(const long long& groupid, const long long& qq) {
 		query.reset();
+        mysqlpp::SimpleResult res;
 		query << "insert into qqadmin(groupid , adminqq) values (%0q,%1q)";
 		query.parse();
-		const mysqlpp::SimpleResult res=query.execute(groupid,qq);
-		MessageChain result;
+        try {
+            res = query.execute(groupid, qq);
+        }catch(const exception& ex){
+            cerr<<ex.what()<<endl;
+            return MessageChain().Plain("发生错误");
+        }
 		if (string(res.info()).empty()) {
-			result.Add<PlainMessage>("已添加");
-			return result;
+            
+			return MessageChain().Plain("已添加");
 		}
-		cout << string(res.info()) << endl;
-		result.Add<PlainMessage>("出现错误，请查看终端以获取详细信息");
-		return result;
+        
+		cerr << string(res.info()) << endl;
+		return MessageChain().Plain("出现错误，请查看终端以获取详细信息");
 	}
 	MessageChain deperm(const long long& groupid, const long long& qq) {
 		query.reset();
 		query << "delete from qqadmin where groupid = %0q and adminqq = %1q";
 		query.parse();
-		const mysqlpp::SimpleResult res = query.execute(groupid, qq);
-		MessageChain msg;
+        mysqlpp::SimpleResult res;
+        try {
+            res = query.execute(groupid, qq);
+        }catch(const exception& ex){
+            cerr<<ex.what()<<endl;
+            return MessageChain().Plain("发生错误");
+        }
 		if (string(res.info()).empty()) {
-			msg.Add<PlainMessage>("已删除");
-			return msg;
+			return MessageChain().Plain("已删除");
 		}
-		cout << string(res.info()) << endl;
-		msg.Add<PlainMessage>("出现错误，请查看终端以获取详细信息");
-		return msg;
+		cerr << string(res.info()) << endl;
+		return MessageChain().Plain("出现错误，请查看终端以获取详细信息");
 	}
 };
