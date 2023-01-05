@@ -6,9 +6,9 @@
 #include <mutex>
 using namespace std;
 using namespace Cyan;
-class administrative :public permchecker {
+class administrative :public DatabaseOperator {
 public:
-	explicit administrative(db_info dbinf):permchecker(dbinf) {
+	explicit administrative(db_info dbinf): DatabaseOperator(dbinf) {
 		
 	}
 	MessageChain handler(GroupMessage m) {
@@ -36,6 +36,20 @@ public:
 				return MessageChain().Plain("出现错误，请查看终端以获取详细信息");
 			}
 		}
+        if(*commands.begin()=="/recall"){
+            if(!checkperm(m.Sender.Group.GID.ToInt64(),m.Sender.QQ.ToInt64())){
+                return MessageChain().Plain("您不是本群的管理员");
+            }
+            if(commands.size()!=1)return MessageChain();
+            try{
+                bot.Recall(m.MessageChain.GetFirst<QuoteMessage>().MessageId(),m.Sender.Group.GID);
+                bot.Recall(m.MessageId(),m.Sender.Group.GID);
+            }
+            catch(const std::exception& ex){
+                cerr<<ex.what()<<endl;
+                return MessageChain().Plain("出现错误，请查看终端以获取详细信息");
+            }
+        }
 		if (*commands.begin() == "/kick") {
 			if (!checkperm(m.Sender.Group.GID.ToInt64(), m.Sender.QQ.ToInt64())) {
 				return MessageChain().Plain("您不是本群的管理员");

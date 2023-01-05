@@ -12,11 +12,11 @@ using namespace Cyan;
 map<long long,string>cvids;
 map<long long,string>pids;
 map<long long,mutex>cvl,pl;
-class chatobj :public permchecker{
+class chatobj :public DatabaseOperator{
 	db_info dbinfo_;
     mutex safelock;
 public:
-	explicit chatobj(const db_info dbf):permchecker(dbf) {
+	explicit chatobj(const db_info dbf): DatabaseOperator(dbf) {
 		dbinfo_ = dbf;
 	}
 	MessageChain handler(GroupMessage m) {

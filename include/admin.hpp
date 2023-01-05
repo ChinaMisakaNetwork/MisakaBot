@@ -10,7 +10,7 @@ struct db_info {
 	string db_name;
 	int port;
 };
-class permchecker {
+class DatabaseOperator {
 protected:
 	string db_addr,db_name;
 	int port;
@@ -20,7 +20,7 @@ protected:
 	mysqlpp::Connection conn;
 public:
 	mysqlpp::Query query = conn.query();
-	explicit permchecker(db_info dbinf) {
+	explicit DatabaseOperator(db_info dbinf) {
 		db_name = dbinf.db_name;
 		db_addr = dbinf.db_addr;
 		port = dbinf.port;
@@ -29,6 +29,10 @@ public:
 		connected = conn.connect(db_name.c_str(), db_addr.c_str(), username.c_str(), pwd.c_str(), port);
 		query = conn.query();
 	}
+    ~DatabaseOperator() {
+        query.clear();
+        conn.disconnect();
+    }
 	bool checkperm(const long long& groupid, const long long& qq) {
         mysqlpp::StoreQueryResult res;
         retry:
