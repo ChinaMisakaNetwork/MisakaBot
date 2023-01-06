@@ -4,7 +4,6 @@
 #include <mirai.h>
 #include <mysql++.h>
 #include <cpr/cpr.h>
-#include "minigames.hpp"
 #include <mutex>
 #include <string>
 #include <vector>
@@ -36,7 +35,6 @@ map<long long, vector<watchdog::report>>report_list;
 MessageChain handle_message(GroupMessage m, db_info dbf, const string& deepai_key, const double& nsfw_value,const string& hypapi,const bool& nsfw_enabled) {
 	neteasemusic music;
 	chatobj chat(dbf);
-    minigames mg(dbf);
 	weather wt;
 	bilibili bz;
 	hitokoto htkt;
@@ -61,8 +59,6 @@ MessageChain handle_message(GroupMessage m, db_info dbf, const string& deepai_ke
 	if (!res.Empty())return res;
 	res = hyp.handler(m);
 	if (!res.Empty())return res;
-    res=mg.handler(m);
-    if(!res.Empty())return res;
 	res = admin.handler(m);
 	if (!res.Empty()) return res;
 	res = mai.handler(m);
@@ -85,20 +81,7 @@ MessageChain handle_message(GroupMessage m, db_info dbf, const string& deepai_ke
 	if (!res.Empty())return res;
 	res = pic.handler(m);
 	if (!res.Empty())return res;
-	return {};
-}
-MessageChain handle_message(FriendMessage m,db_info db_information){
-    watchdog wd(db_information);
-    administrative admin(db_information);
-    chatobj chater(db_information);
-    MessageChain mc;
-    mc = wd.handler(m, report_list, wdl);
-    if (!mc.Empty())return mc;
-    mc = admin.handler(m);
-    if (!mc.Empty())return mc;
-    mc = chater.handler(m);
-    if(!mc.Empty())return mc;
-    return {};
+	return MessageChain();
 }
 int main(int argc,const char* argv[]) {
 reboot:
@@ -106,9 +89,6 @@ reboot:
 	system("chcp 65001");
 #endif
 	system("clear");
-    time_t nt;
-    time(&nt);
-    nowdate = *localtime(&nt);
 	MiraiBot bot;
 	SessionOptions opts;
 	ifstream fin;
@@ -128,7 +108,7 @@ reboot:
 		fout.open("/etc/MisakaBot/MisakaBot.conf");
 		fout << "BotQQ=12345678" << endl << "HttpHostname=localhost" << endl << "WebSocketHostname=localhost" << endl << "HttpPort=8080" << endl << "WebSocketPort=8080" << endl
 			<< "VerifyKey=VerifyKey" << endl << "MySQLdatabase=DatabaseName" << endl << "MySQLaddress=localhost" << endl << "MySQLusername=username" << endl << "MySQLpassword=password" << endl
-			<< "MySQLconnectPort=3306" << endl << "入群欢迎词=欢迎词" << endl << "DeepaiKey=" << endl << "nsfw_value=0.75" << endl << "nsfw_enabled=false" << endl
+			<< "MySQLconnectPort=3306" << endl << "入群欢迎词=欢迎词" << endl << "DeepaiKey=Key" << endl << "nsfw_value=0.75" << endl << "nsfw_enabled=false" << endl
 			<< "GenshinlToken=" << endl << "GenshinltUID=" << endl << "GenshinCookieToken=" << endl << "GenshinAccountId=" << endl << "HypixelAPIKey=";
 		cout << "Conf created at /etc/MisakaBot/MisakaBot.conf , please edit it and restart the Bot." << endl;
 		return 1;
@@ -182,15 +162,11 @@ reboot:
 			try {
 				MessageChain mc = handle_message(m, db_information, deepai_key, nsfw_value, hypapi, nsfw_enabled);
 				if(!mc.Empty()) {
-					MessageChain reply;
-					reply.At(m.Sender.QQ);
-					reply = reply + mc;
-					bot.SendMessage(m.Sender.Group.GID, reply);
+					mc = MessageChain().At(m.Sender.QQ).Plain("\n") + mc;
+					bot.SendMessage(m.Sender.Group.GID, mc);
 				}
 			}
-			catch (const exception& ex) {
-				cerr << ex.what() << endl;
-			}
+			catch (...) {}
 		});
 	bot.On<NewFriendRequestEvent>([&](NewFriendRequestEvent e) {
 		e.Accept();
@@ -210,23 +186,15 @@ reboot:
 	bot.On<FriendMessage>(
 		[&](FriendMessage m) {
 			try {
-                MessageChain mc=handle_message(m,db_information);
-                if(!mc.Empty())bot.SendMessage(m.Sender.QQ,mc);
+				watchdog wd(db_information);
+				administrative admin(db_information);
+				MessageChain mc = wd.handler(m, report_list, wdl);
+				if (!mc.Empty())bot.SendMessage(m.Sender.QQ, mc);
+				mc = admin.handler(m);
+				if (!mc.Empty())bot.SendMessage(m.Sender.QQ, mc);
 			}
 			catch (...) {}
 		});
-    bot.On<MemberLeaveEventQuit>([&](MemberLeaveEventQuit m){
-        try{
-            if(m.Member.SpecialTitle.empty())bot.SendMessage(m.Member.Group.GID,MessageChain().Plain(m.Member.MemberName+"("+to_string(m.Member.QQ.ToInt64())+")"+"离开了"));
-            bot.SendMessage(m.Member.Group.GID,MessageChain().Plain("["+m.Member.SpecialTitle+"]"+m.Member.MemberName+"("+to_string(m.Member.QQ.ToInt64())+")"+"离开了"));
-        }catch(...){}
-    });
-    bot.On<MemberLeaveEventKick>([&](MemberLeaveEventKick m){
-        try{
-            if(m.Member.SpecialTitle.empty())bot.SendMessage(m.Member.Group.GID,MessageChain().Plain(m.Member.MemberName+"("+to_string(m.Member.QQ.ToInt64())+")"+"被踢了"));
-            bot.SendMessage(m.Member.Group.GID,MessageChain().Plain("["+m.Member.SpecialTitle+"]"+m.Member.MemberName+"("+to_string(m.Member.QQ.ToInt64())+")"+"被踢了"));
-        }catch(...){}
-    });
 	bot.On<LostConnection>([&](LostConnection e){
 			cout << e.ErrorMessage << " (" << e.Code << ")" << endl;
 			while (true)
@@ -267,7 +235,7 @@ reboot:
 				cout << "格式错误" << endl;
 				goto cont;
 			}
-			DatabaseOperator db(db_information);
+			permchecker db(db_information);
 			db.query.reset();
 			string s = commands[2];
 			db.query << "insert into deniedwords(groupid, word) values (%0q,%1q)";
@@ -284,7 +252,7 @@ reboot:
 				cout << "格式错误" << endl;
 				goto cont;
 			}
-			DatabaseOperator db(db_information);
+			permchecker db(db_information);
 			db.query.reset();
 			string s = commands[2];
 			db.query << "delete from deniedwords where groupid = %0q and word = %1q";
@@ -301,7 +269,7 @@ reboot:
 				cout << "格式错误" << endl;
 				goto cont;
 			}
-			DatabaseOperator db(db_information);
+			permchecker db(db_information);
 			string res = db.grantperm(atoll(commands[1].c_str()), atoll(commands[2].c_str())).GetPlainText();
 			cout << res << endl;
 		}
@@ -310,7 +278,7 @@ reboot:
 				cout << "格式错误" << endl;
 				goto cont;
 			}
-			DatabaseOperator db(db_information);
+			permchecker db(db_information);
 			string res = db.deperm(atoll(commands[1].c_str()), atoll(commands[2].c_str())).GetPlainText();
 			cout << res << endl;
 		}
