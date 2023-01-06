@@ -8,7 +8,7 @@
 #include "admin.hpp"
 using namespace std;
 using namespace Cyan;
-class watchdog :public permchecker{
+class watchdog :public DatabaseOperator{
     db_info dbinfo;
     static bool ingroup(MiraiBot& bot,const long long&group,const long long&qq) {
         const vector<GroupMember> members = bot.GetGroupMembers(GID_t(group));
@@ -26,7 +26,7 @@ public:
         long long sender = 0;
         string reason = "";
     };
-    watchdog(db_info dbinf) : permchecker(dbinf) {
+    watchdog(db_info dbinf) : DatabaseOperator(dbinf) {
         dbinfo = dbinf;
     }
     MessageChain handler(GroupMessage m, map<long long, vector<report>>& trtr, map<long long, mutex>& wdl) const {
