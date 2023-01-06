@@ -6,11 +6,11 @@
 #include <string>
 using namespace std;
 using namespace Cyan;
-class commands :public permchecker{
+class commands :public DatabaseOperator{
 private:
 	db_info dbinfo;
 public:
-	explicit commands(const db_info dbinf) :permchecker(dbinf) {
+	explicit commands(const db_info dbinf) : DatabaseOperator(dbinf) {
 		dbinfo = dbinf;
 	}
 	MessageChain handler(GroupMessage m) {
