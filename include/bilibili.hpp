@@ -46,9 +46,35 @@ public:
 					ans += "标题：";
 					ans += reply["title"].get<string>();
 					ans += '\n';
+                    msg.Image(m.GetMiraiBot().UploadGroupImage(reply["pic"].get<string>(),true));
 					ans += "简介：";
 					ans += reply["desc"].get<string>();
+                    ans += '\n';
+                    ans+="分辨率：";
+                    ans+=to_string(reply["dimension"]["width"].get<int>());
+                    ans+="x";
+                    ans+=to_string(reply["dimension"]["height"].get<int>());
+                    ans+='\n';
+                    ans+="播放量：";
+                    ans+=to_string(reply["stat"]["view"].get<int>());
+                    ans+='\n';
+                    ans+="评论数：";
+                    ans+=to_string(reply["stat"]["reply"].get<int>());
+                    ans+='\n';
+                    ans="点赞：";
+                    ans+=to_string(reply["stat"]["like"].get<int>());
+                    ans+='\n';
+                    ans+="投币：";
+                    ans+=to_string(reply["stat"]["coin"].get<int>());
+                    ans+='\n';
+                    ans+="收藏：";
+                    ans+=to_string(reply["stat"]["favorite"].get<int>());
+                    ans+='\n';
+                    ans+="UP猪：";
+                    ans+=reply["owner"]["name"].get<string>();
+                    ans+='\n';
 					msg.Add<PlainMessage>(ans);
+                    msg.Image(m.GetMiraiBot().UploadGroupImage(reply["owner"]["face"].get<string>(), true));
 					return msg;
 				}
 				msg.Add<PlainMessage>("请检查输入是否正确");
@@ -73,7 +99,11 @@ public:
 					ans += '\n';
 					ans += "生日：";
 					ans += reply["birthday"].get<string>();
+                    ans+='\n';
+                    ans+="头像：";
 					msg.Add<PlainMessage>(ans);
+                    msg.Image(m.GetMiraiBot().UploadGroupImage(reply["face"].get<string>(), true));
+                    msg.Add<PlainMessage>("签名："+reply["sign"].get<string>());
 					return msg;
 				}
 			}
