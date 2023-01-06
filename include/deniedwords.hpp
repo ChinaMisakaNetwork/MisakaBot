@@ -6,10 +6,10 @@
 #include "wordcheck.hpp"
 using namespace std;
 using namespace Cyan;
-class deniedwords :public DatabaseOperator{
+class deniedwords :public permchecker{
     db_info dbinfo_;
 public:
-    explicit deniedwords(const db_info dbinf) : DatabaseOperator(dbinf) {
+    explicit deniedwords(const db_info dbinf) :permchecker(dbinf) {
         dbinfo_ = dbinf;
     }
     MessageChain handler(GroupMessage m,map<long long, trie_ac>& ac_automation, map<long long, bool>& wordcheck_list, mutex& ac_automation_lock, mutex& wordcheck_list_lock) {
