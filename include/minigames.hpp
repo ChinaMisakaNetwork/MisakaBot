@@ -1,7 +1,6 @@
 #pragma once
 #include <mysql++.h>
 #include "admin.hpp"
-#include <cpr/cpr.h>
 #include <mirai.h>
 #include <mutex>
 #include <string>
@@ -323,13 +322,61 @@ public:
             }
             else rp = RPTable[QT];
             MessageChain msg;
-            auto res = cpr::Get(cpr::Url{ "https://tenapi.cn/acg/?return=json" });
-            json reply = json::parse(res.text);
+            //plz update
             GroupImage img;
-            img.Url = reply["imgurl"].get<string>();
+            img.Url = "https://tenapi.cn/acg/";
             msg.Plain("今日人品为"+to_string(rp));
             return msg.Image(img);
         }
         return {};
     }
 };
+class RandomGameBase{
+protected:
+    string name;
+    unsigned short id;
+    string description;
+    random_device rnd;
+    mt19937 gainrnd;
+public:
+    RandomGameBase(string name,unsigned short id,string description):name(name),id(id),description(description){
+        gainrnd.seed(rnd());
+    }
+    virtual MessageChain handler(const GroupMessage& m)=0;
+    virtual ~RandomGameBase()=default;
+};
+class RandomSong : public RandomGameBase{
+    public:
+    RandomSong():RandomGameBase("随机歌曲",1,"随机一首歌曲"){}
+    MessageChain handler(const GroupMessage& m) override{
+        MessageChain msg;
+        MusicShare ms;
+        auto res=cpr::Get(cpr::Url{"https://autumnfish.cn/personalized/newsong"});
+        json data=json::parse(res.text)["result"];
+        const int size=data.size();
+        uniform_int_distribution<> range(0, size-1);
+        short index=range(gainrnd);
+        string title=data[index]["name"].get<string>();
+        string artist=data[index]["song"]["artists"][0]["name"].get<string>();
+        string picurl=data[index]["song"]["album"]["picUrl"].get<string>();
+        string refAddress="https://music.163.com/song?id="+data[index]["id"].get<string>();
+        auto Musicres = cpr::Get(cpr::Url{ "https://autumnfish.cn/song/url?id=" + to_string(data[index]["song"]["id"].get<int>()) });
+        json Musicdata = json::parse(res.text);
+        string MusicUrl = data["data"][0].at("url").get<string>();
+        string alias="";
+        if(!data[index]["song"]["alias"].empty()){
+            alias=data[index]["song"]["alias"][0].get<string>();
+        }else alias="";
+        if(!alias.empty()){
+            ms.Title(title+"（"+alias+"）");
+        }else ms.Title(title);
+        ms.Summary(artist+" - "+title);
+        ms.PictureUrl(picurl);
+        ms.MusicUrl(MusicUrl);
+        ms.JumUrl(refAddress);
+        msg.Add<MusicShare>(ms);
+        return msg;
+    }
+};
+//この世界から旅立つ前に
+//これまでの日々を浮かべる

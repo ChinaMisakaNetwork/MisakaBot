@@ -9,8 +9,9 @@ class recorder{
 	ofstream fs;
 	ofstream pfs;
 public:
-	void handler(GroupMessage m, map<long long, mutex>& fslock)
+	void handler(GroupMessage m, map<long long, mutex>& fslock,map<long long,bool> exemptrecord)
 	{
+		if (exemptrecord[m.Sender.Group.GID.ToInt64()] != 1)return;
 		const string s = m.MessageChain.GetPlainText();
 		fslock[m.Sender.Group.GID.ToInt64()].lock();
 		fs.open("chatrecord/" + to_string(m.Sender.Group.GID.ToInt64()) + ".txt",ios::app);

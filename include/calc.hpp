@@ -19,6 +19,7 @@ public:
             if (temp.empty())continue;
             commands.push_back(temp);
         }
+
         if (commands.size() == 0)return msg;
         if (commands.size() != 2)return msg;
         if (*commands.begin() == "计算") {
