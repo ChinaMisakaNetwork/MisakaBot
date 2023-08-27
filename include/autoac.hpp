@@ -7,7 +7,6 @@
 #include <queue>
 #include <iostream>
 #include <map>
-
 using namespace std;
 
 constexpr int visible_number = 224;

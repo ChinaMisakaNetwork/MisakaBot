@@ -1,10 +1,11 @@
 #include <iostream>
 #include <map>
+#include <chrono>
 #include <fstream>
 #include <mirai.h>
 #include <mysql++.h>
 #include <cpr/cpr.h>
-#include "minigames.hpp"
+//#include "minigames.hpp"
 #include <mutex>
 #include <string>
 #include <vector>
@@ -12,12 +13,13 @@
 #include "deniedwords.hpp"
 #include "calc.hpp"
 #include "chat.hpp"
+#include "getxgp.hpp"
 #include "wordcheck.hpp"
 #include "hitokoto.hpp"
 #include "commands.hpp"
 #include "genshin.hpp"
 #include "minecraft.hpp"
-#include "watchdog.hpp"
+//#include "watchdog.hpp"
 #include "neteasemusic.hpp"
 #include "weather.hpp"
 #include "record.hpp"
@@ -30,13 +32,14 @@ map<long long, trie_ac>ACer;
 map<long long, bool>wordcheck_list;
 mutex ACer_lock, wordcheck_list_lock;
 map<long long, mutex>fslock;
-map<long long, mutex>wdl;
+map<unsigned long long, chrono::steady_clock::time_point>cooldown;
+queue<string>xgplist;
 string GenshinlToken, GenshinltUID, GenshinCookieToken, GenshinAccountId;
-map<long long, vector<watchdog::report>>report_list;
+map<long long, bool>exemptrecord;
 MessageChain handle_message(GroupMessage m, db_info dbf, const string& deepai_key, const double& nsfw_value,const string& hypapi,const bool& nsfw_enabled) {
 	neteasemusic music;
 	chatobj chat(dbf);
-    minigames mg(dbf);
+	GetXGP xgp;
 	weather wt;
 	bilibili bz;
 	hitokoto htkt;
@@ -47,22 +50,18 @@ MessageChain handle_message(GroupMessage m, db_info dbf, const string& deepai_ke
 	administrative admin(dbf);
 	deniedwords dw(dbf);
 	calc calculator;
-	watchdog wd(dbf);
 	wordchecker checker(dbf);
 	commands cmd(dbf);
 	genshin gs(GenshinlToken, GenshinltUID, GenshinCookieToken, GenshinAccountId);
-	rcer.handler(m, fslock);
+	rcer.handler(m, fslock,exemptrecord);
 	MessageChain res;
 	res = dw.handler(m, ACer, wordcheck_list, ACer_lock, wordcheck_list_lock);
 	if (!res.Empty())return res;
 	res = checker.handler(m, ACer, wordcheck_list, deepai_key, nsfw_value,nsfw_enabled);
 	if (!res.Empty())return res;
-	res = wd.handler(m, report_list, wdl);
-	if (!res.Empty())return res;
 	res = hyp.handler(m);
 	if (!res.Empty())return res;
-    res=mg.handler(m);
-    if(!res.Empty())return res;
+	res = xgp.handler(m, xgplist, cooldown);
 	res = admin.handler(m);
 	if (!res.Empty()) return res;
 	res = mai.handler(m);
@@ -88,12 +87,12 @@ MessageChain handle_message(GroupMessage m, db_info dbf, const string& deepai_ke
 	return {};
 }
 MessageChain handle_message(FriendMessage m,db_info db_information){
-    watchdog wd(db_information);
+    //watchdog wd(db_information);
     administrative admin(db_information);
     chatobj chater(db_information);
     MessageChain mc;
-    mc = wd.handler(m, report_list, wdl);
-    if (!mc.Empty())return mc;
+    //mc = wd.handler(m, report_list, wdl);
+    //if (!mc.Empty())return mc;
     mc = admin.handler(m);
     if (!mc.Empty())return mc;
     mc = chater.handler(m);
@@ -108,7 +107,7 @@ reboot:
 	system("clear");
     time_t nt;
     time(&nt);
-    nowdate = *localtime(&nt);
+    tm nowdate = *localtime(&nt);
 	MiraiBot bot;
 	SessionOptions opts;
 	ifstream fin;
@@ -129,7 +128,7 @@ reboot:
 		fout << "BotQQ=12345678" << endl << "HttpHostname=localhost" << endl << "WebSocketHostname=localhost" << endl << "HttpPort=8080" << endl << "WebSocketPort=8080" << endl
 			<< "VerifyKey=VerifyKey" << endl << "MySQLdatabase=DatabaseName" << endl << "MySQLaddress=localhost" << endl << "MySQLusername=username" << endl << "MySQLpassword=password" << endl
 			<< "MySQLconnectPort=3306" << endl << "入群欢迎词=欢迎词" << endl << "DeepaiKey=" << endl << "nsfw_value=0.75" << endl << "nsfw_enabled=false" << endl
-			<< "GenshinlToken=" << endl << "GenshinltUID=" << endl << "GenshinCookieToken=" << endl << "GenshinAccountId=" << endl << "HypixelAPIKey=";
+			<< "GenshinlToken=" << endl << "GenshinltUID=" << endl << "GenshinCookieToken=" << endl << "GenshinAccountId=" << endl << "HypixelAPIKey="<<endl<<"ChatRecordExempt=";
 		cout << "Conf created at /etc/MisakaBot/MisakaBot.conf , please edit it and restart the Bot." << endl;
 		return 1;
 	}
@@ -142,6 +141,12 @@ reboot:
 			}
 		}
 	}
+	fin.close();
+	fin.open("/etc/MisakaBot/xgp_account.txt");
+	while (fin >> temp) {
+		xgplist.push(temp);
+	}
+	fin.close();
 	opts.BotQQ = QQ_t((stoi(conf[0])));
 	opts.HttpHostname = conf[1];
 	opts.WebSocketHostname = conf[2];
@@ -163,6 +168,11 @@ reboot:
 	GenshinCookieToken = conf[17];
 	GenshinAccountId = conf[18];
 	hypapi = conf[19];
+	//string temp;
+	while (getline(stringstream(conf[20]), temp, ',')) {
+		if (temp.empty())continue;
+		exemptrecord[stol(temp)] = 1;
+	}
 	wordchecker wordchecker_init(db_information);
 	wordchecker_init.init(ACer,wordcheck_list,ACer_lock,wordcheck_list_lock);
 	while (true){
@@ -254,6 +264,12 @@ reboot:
 		if (commands.size() == 0)goto cont;
 		if (cmd == "/stop" || cmd=="/exit") {
 			bot.Disconnect();
+			ofstream fout;
+			fout.open("etc/MisakaBot/xgp_account.txt");
+			while (!xgplist.empty()) {
+				fout << xgplist.front() << endl;
+				xgplist.pop();
+			}
 			break;
 		}
 		if (cmd == "/reboot" || cmd=="/restart") {
@@ -261,6 +277,20 @@ reboot:
 			bot.Disconnect();
 			commands.clear();
 			goto reboot;
+		}
+		if (*commands.begin() == "/reloadxgp") {
+			while (!xgplist.empty()) {
+				xgplist.pop();
+			}
+			ifstream fin;
+			fin.open("/etc/MisakaBot/xgp_account.txt");
+			while (fin >> temp) {
+				xgplist.push(temp);
+			}
+			fin.close()
+		}
+		if (*commands.begin() == "/queryxgp") {
+			cout << xgplist.size() << endl;
 		}
 		if (*commands.begin() == "添加敏感词") {
 			if (commands.size() != 3) {

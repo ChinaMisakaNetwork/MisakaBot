@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <mirai.h>
 #include <mysql++.h>
 #include <vector>
@@ -29,10 +29,8 @@ public:
 				ans += '\n';
 				ans += "来源：hitokoto.cn，编号：";
 				ans += id;
-				res = cpr::Get(cpr::Url{ "https://tenapi.cn/acg/?return=json" });
-				reply = json::parse(res.text);
 				GroupImage img;
-				img.Url = reply["imgurl"].get<string>();
+				img.Url = "https://tenapi.cn/acg/";
 				msg.Image(img);
 				msg.Add<PlainMessage>(ans);
 				return msg;
